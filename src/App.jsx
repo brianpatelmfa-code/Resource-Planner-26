@@ -3,57 +3,97 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from './firebaseClient'; 
 
 const STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap');
   
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   
   body {
-    background: #0d1117;
+    background: #000;
     color: #c9d1d9;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
   }
   
   ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-track { background: #010409; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #484f58; }
   
   input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); cursor:pointer; opacity:0.6; }
   select option { background:#161b22; color:#c9d1d9; }
   
-  /* Studio 137 Dark Cards */
+  /* --- BACKGROUND & EMBERS --- */
+  .ambient-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background: #000; overflow: hidden;
+  }
+  .ambient-glow-1 {
+    position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
+    background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 60%);
+    top: -20vh; left: -10vw; animation: float 20s infinite alternate ease-in-out;
+  }
+  .ambient-glow-2 {
+    position: absolute; width: 60vw; height: 60vw; border-radius: 50%;
+    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 60%);
+    bottom: -10vh; right: -10vw; animation: float 25s infinite alternate-reverse ease-in-out;
+  }
+  .ember {
+    position: absolute; background: #f97316; border-radius: 50%;
+    box-shadow: 0 0 8px #f97316, 0 0 16px #e11d48;
+    opacity: 0; animation: rise linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(5vw, 5vh) scale(1.1); }
+  }
+  @keyframes rise {
+    0% { bottom: -10px; transform: translateX(0); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { bottom: 100vh; transform: translateX(-50px); opacity: 0; }
+  }
+
+  /* --- LOGO RINGS --- */
+  .logo-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; }
+  .ring-amber {
+    border-left-color: rgba(249,115,22,0.9); border-top-color: rgba(249,115,22,0.4);
+    animation: spin 8s linear infinite;
+  }
+  .ring-blue {
+    inset: 6px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4);
+    animation: spin 12s linear infinite reverse;
+  }
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* --- DATA PANELS (Dark areas) --- */
+  .sidebar { background: rgba(1, 4, 9, 0.88); backdrop-filter: blur(24px); border-right: 1px solid #30363d; }
+  .main-panel { background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(24px); }
+  
   .card {
-    background: #161b22;
-    border: 1px solid #30363d;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    background: #161b22; border: 1px solid #30363d;
+    border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
   }
   
-  /* Glowing Accents */
   .glow-border { position: relative; }
   .glow-border::before {
     content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
     background: linear-gradient(45deg, #f97316, #3b82f6);
-    z-index: -1; border-radius: 11px; opacity: 0.3;
+    z-index: -1; border-radius: 11px; opacity: 0.4; transition: opacity 0.3s;
   }
+  .glow-border:hover::before { opacity: 0.8; }
 
   .ginput {
-    background: #010409;
-    border: 1px solid #30363d;
-    border-radius: 6px;
-    color: #c9d1d9;
-    font-family: inherit;
-    outline: none;
-    transition: border-color .2s;
+    background: #010409; border: 1px solid #30363d; border-radius: 6px;
+    color: #c9d1d9; font-family: inherit; outline: none; transition: all .2s;
   }
-  .ginput:focus { border-color: #f97316; }
+  .ginput:focus { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
   
-  .rh { transition: background .14s; border-bottom: 1px solid #21262d; cursor: pointer; }
+  .rh { transition: background .2s ease; border-bottom: 1px solid #21262d; cursor: pointer; }
   .rh:hover { background: #21262d !important; }
   
-  .brand-serif { font-family: 'Playfair Display', serif; }
-  
+  .interactive-label { transition: all 0.2s ease; cursor: pointer; }
+  .interactive-label:hover { background: rgba(255,255,255,0.05); transform: translateX(2px); }
+
   @keyframes su { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fi { from{opacity:0} to{opacity:1} }
 `;
@@ -83,7 +123,6 @@ function dStr(d){return d instanceof Date?d.toISOString().slice(0,10):d;}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 function getMon(d){const x=new Date(d);x.setHours(0,0,0,0);const dy=x.getDay();x.setDate(x.getDate()+(dy===0?-6:1-dy));return x;}
 
-// --- NEW DAY-BY-DAY TIMELINE LOGIC ---
 function getDaysForWeekly(anchor) {
   const m = getMon(anchor);
   return Array.from({length: 7}, (_, i) => {
@@ -142,17 +181,33 @@ function buildSeed(){
   };
 }
 
-// ── Jira-Style Donut Chart Component ──
+// ── Embers Component ──
+function Embers() {
+  const embers = useMemo(() => Array.from({length: 20}).map(() => ({
+    left: `${Math.random() * 100}%`,
+    size: `${Math.random() * 3 + 2}px`,
+    duration: `${Math.random() * 8 + 8}s`,
+    delay: `${Math.random() * 5}s`
+  })), []);
+  return (
+    <div className="ambient-bg">
+      <div className="ambient-glow-1"/>
+      <div className="ambient-glow-2"/>
+      {embers.map((e, i) => (
+        <div key={i} className="ember" style={{ left: e.left, width: e.size, height: e.size, animationDuration: e.duration, animationDelay: e.delay }}/>
+      ))}
+    </div>
+  );
+}
+
+// ── Donut Chart ──
 function DonutChart({ data, colors }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   let cumulativePercent = 0;
-  
-  if (total === 0) {
-    return <div style={{width: 140, height: 140, borderRadius: "50%", border: "8px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:12}}>No Data</div>;
-  }
+  if (total === 0) return <div style={{width: 140, height: 140, borderRadius: "50%", border: "8px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:12}}>No Data</div>;
 
   return (
-    <div style={{position: "relative", width: 140, height: 140}}>
+    <div style={{position: "relative", width: 140, height: 140, flexShrink: 0}}>
       <svg viewBox="0 0 32 32" style={{transform: "rotate(-90deg)", borderRadius: "50%"}}>
         {data.map((slice) => {
           const pct = (slice.value / total) * 100;
@@ -169,14 +224,14 @@ function DonutChart({ data, colors }) {
         })}
       </svg>
       <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-        <div style={{fontSize: 20, fontWeight: 700, color:"#f0f6fc"}}>{total}</div>
-        <div style={{fontSize: 9, color:"#8b949e", textTransform:"uppercase"}}>Allocations</div>
+        <div style={{fontSize: 22, fontWeight: 800, color:"#f0f6fc"}}>{total}</div>
+        <div style={{fontSize: 9, color:"#8b949e", textTransform:"uppercase", letterSpacing:"0.05em"}}>Items</div>
       </div>
     </div>
   );
 }
 
-// ── Water cell (Adapted for Daily View) ──
+// ── Water cell ──
 function WaterCell({entries, period}){
   const act=entries.filter(e=>active(e, period));
   const tot=act.reduce((s,e)=>s+Number(e.pct),0);
@@ -184,9 +239,9 @@ function WaterCell({entries, period}){
   const cl=Math.min(tot,100);
 
   let wc = "transparent";
-  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; // Studio137 Amber
-  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; // Studio137 Blue
-  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; 
+  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; // Amber
+  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; // Blue
+  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; // Emerald
 
   return(
     <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"#010409", border:`1px solid ${over?"rgba(249,115,22,.5)":"#30363d"}`}}>
@@ -200,14 +255,12 @@ function WaterCell({entries, period}){
   );
 }
 
-// ── DARK MODALS ──
+// ── MODALS ──
 function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}){
   const [local,setLocal]=useState(entries.map(e=>({...e})));
   const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:APR1,end:dStr(addDays(new Date(APR1),56))}]);
   const rm=i=>setLocal(p=>p.filter((_,j)=>j!==i));
   const upd=(i,f,v)=>setLocal(p=>p.map((e,j)=>j===i?{...e,[f]:f==="pct"?Math.min(100,Math.max(0,Number(v)||0)):v}:e));
-  
-  // Checking active max load against a generic generic period logic to flag > 100%
   const activeErr = local.some(l => local.filter(e => e.start <= l.start && e.end >= l.start).reduce((s,e)=>s+Number(e.pct),0) > 100);
 
   return(
@@ -314,7 +367,6 @@ export default function Dashboard(){
   const [functions, setFunctions] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Fetch initial data from FIREBASE
   useEffect(() => {
     async function loadData() {
       try {
@@ -387,7 +439,6 @@ export default function Dashboard(){
     }).filter(t => t.people.length > 0);
   }, [functions, filteredPeople]);
 
-  // Chart Data Prep
   const chartData = useMemo(() => {
     const projCounts = {};
     Object.values(allocations).flat().forEach(entry => {
@@ -395,6 +446,14 @@ export default function Dashboard(){
     });
     return Object.entries(projCounts).map(([label, value]) => ({label, value})).sort((a,b)=>b.value-a.value);
   }, [allocations]);
+
+  const teamWorkload = useMemo(() => {
+    return allPeople.map(p => {
+      const entries = allocations[p.name] || [];
+      const maxAlloc = Math.max(...periods.map(d => allocW(entries, d)), 0);
+      return { name: p.name, load: maxAlloc };
+    }).sort((a,b) => b.load - a.load).slice(0, 6);
+  }, [allPeople, allocations, periods]);
 
   function saveAlloc(name, entries){
     const newAlloc = {...allocations, [name]: entries};
@@ -433,27 +492,36 @@ export default function Dashboard(){
   if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0d1117", color:"#f97316"}}>Booting Systems...</div>;
 
   return(
-    <div style={{display:"flex", minHeight:"100vh"}}>
+    <div style={{display:"flex", minHeight:"100vh", position:"relative"}}>
       <style>{STYLE}</style>
+      <Embers />
 
       {/* --- LEFT SIDEBAR (PROJECTS) --- */}
-      <div style={{width: 260, background: "#010409", borderRight: "1px solid #30363d", display:"flex", flexDirection:"column"}}>
-        <div style={{padding: "24px 20px", borderBottom: "1px solid #30363d"}}>
-          <div className="brand-serif" style={{fontSize: 22, color: "#f0f6fc", marginBottom: 4}}>Studio 137</div>
-          <div style={{fontSize: 11, color: "#8b949e", textTransform: "uppercase", letterSpacing: "0.05em"}}>Resource Command</div>
+      <div className="sidebar" style={{width: 260, display:"flex", flexDirection:"column", zIndex:10}}>
+        
+        {/* LOGO AREA */}
+        <div style={{padding: "36px 20px 30px", borderBottom: "1px solid #30363d", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
+          <div style={{position:"relative", display:"flex", alignItems:"center", justifyContent:"center", width: 140, height: 140, marginBottom: 10}}>
+             <div className="logo-ring ring-amber" />
+             <div className="logo-ring ring-blue" />
+             <div style={{textAlign:"center", zIndex:2}}>
+               <div style={{fontFamily:"'Inter', sans-serif", fontWeight:800, fontSize:22, color:"#fff", letterSpacing:1}}>STUDIO<span style={{color:"#8b949e", fontWeight:300}}>137</span></div>
+             </div>
+          </div>
+          <div style={{fontSize:8, color:"#f97316", textTransform:"uppercase", letterSpacing:2, fontWeight:700, textAlign:"center"}}>Digital Media Solutions</div>
         </div>
         
         <div style={{padding: "20px", flex: 1, overflowY: "auto"}}>
           <div style={{fontSize: 12, fontWeight: 600, color: "#8b949e", marginBottom: 12, textTransform: "uppercase"}}>Active Projects</div>
           <div style={{display:"flex", flexDirection:"column", gap: 6}}>
-            <button onClick={()=>setFilterProj(null)} style={{textAlign:"left", background: !filterProj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6, color: !filterProj ? "#fff" : "#8b949e", cursor:"pointer", fontSize: 13, fontWeight: !filterProj ? 600 : 400}}>
+            <button onClick={()=>setFilterProj(null)} style={{textAlign:"left", background: !filterProj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6, color: !filterProj ? "#fff" : "#8b949e", cursor:"pointer", fontSize: 13, fontWeight: !filterProj ? 600 : 400, transition:"all 0.2s"}}>
               All Projects
             </button>
             {projects.map(proj => (
               <button key={proj} onClick={()=>setFilterProj(filterProj===proj ? null : proj)} style={{
                 textAlign:"left", display:"flex", alignItems:"center", gap: 8,
                 background: filterProj===proj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6,
-                color: filterProj===proj ? "#fff" : "#c9d1d9", cursor:"pointer", fontSize: 13
+                color: filterProj===proj ? "#fff" : "#c9d1d9", cursor:"pointer", fontSize: 13, transition:"all 0.2s"
               }}>
                 <span style={{width: 8, height: 8, borderRadius: "50%", background: getColor(proj), boxShadow: filterProj===proj ? `0 0 8px ${getColor(proj)}` : 'none'}}/>
                 {proj}
@@ -464,11 +532,11 @@ export default function Dashboard(){
       </div>
 
       {/* --- MAIN DASHBOARD AREA --- */}
-      <div style={{flex: 1, display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden"}}>
+      <div className="main-panel" style={{flex: 1, display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden", zIndex:10}}>
         
         {/* Top Header */}
-        <div style={{padding: "20px 30px", borderBottom: "1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center", background:"#0d1117"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search resources..." className="ginput" style={{padding: "10px 16px", fontSize: 14, width: 280, background:"#161b22"}}/>
+        <div style={{padding: "20px 30px", borderBottom: "1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search resources..." className="ginput" style={{padding: "10px 16px", fontSize: 14, width: 280, background:"rgba(1,4,9,0.5)"}}/>
           <div style={{display:"flex", gap: 12}}>
              <button onClick={()=>setAddingMember(true)} className="card" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600}}>+ Add Member</button>
              <button onClick={()=>setAddingProj(true)} className="card glow-border" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600, border:"none"}}>+ Add Project</button>
@@ -478,50 +546,74 @@ export default function Dashboard(){
         {/* Scrollable Content */}
         <div style={{padding: "24px 30px", overflowY:"auto", flex: 1}}>
           
-          {/* JIRA-STYLE WIDGETS */}
-          <div style={{display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, marginBottom: 24}}>
-            <div className="card" style={{padding: 20}}>
+          {/* WIDGET ROW */}
+          <div style={{display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 20, marginBottom: 24}}>
+            
+            {/* Status Overview */}
+            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column"}}>
               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Status overview</div>
-              <div style={{display:"flex", alignItems:"center", gap: 24}}>
+              <div style={{display:"flex", alignItems:"center", gap: 30, flex: 1}}>
                 <DonutChart data={chartData} colors={pColors} />
-                <div style={{display:"flex", flexDirection:"column", gap: 8, flex: 1, maxHeight: 140, overflowY:"auto"}}>
-                  {chartData.slice(0,6).map(d => (
-                    <div key={d.label} style={{display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:11}}>
-                      <div style={{display:"flex", alignItems:"center", gap: 6}}>
-                        <span style={{width:8, height:8, borderRadius:"2px", background: getColor(d.label)}}/>
-                        <span style={{color:"#c9d1d9"}}>{d.label}</span>
+                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: "10px 20px", flex: 1, maxHeight: 150, overflowY:"auto"}} className="hide-scroll">
+                  {chartData.map(d => (
+                    <div key={d.label} onClick={() => setFilterProj(filterProj === d.label ? null : d.label)} className="interactive-label" style={{
+                       display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:12, padding:"6px 10px", borderRadius:6,
+                       background: filterProj === d.label ? `${getColor(d.label)}22` : "transparent",
+                       border: filterProj === d.label ? `1px solid ${getColor(d.label)}` : "1px solid transparent"
+                     }}>
+                      <div style={{display:"flex", alignItems:"center", gap: 8}}>
+                        <span style={{width:8, height:8, borderRadius:"2px", background: getColor(d.label), boxShadow: filterProj === d.label ? `0 0 8px ${getColor(d.label)}` : "none"}}/>
+                        <span style={{color: filterProj === d.label ? "#fff" : "#c9d1d9", fontWeight: filterProj === d.label ? 600 : 400}}>{d.label}</span>
                       </div>
-                      <span style={{color:"#8b949e"}}>{d.value}</span>
+                      <span style={{color:"#8b949e", fontWeight:600}}>{d.value}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
             
-            <div className="card" style={{padding: 20, display:"flex", flexDirection:"column", justifyContent:"center"}}>
-               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 8}}>System Health</div>
-               <div style={{fontSize: 13, color: "#8b949e"}}>Showing timeline for <strong style={{color:"#f97316"}}>{timeView}</strong> view. Use the dial below to navigate time periods. Detailed daily breakdown is enabled. Click any user to manage their allocations.</div>
+            {/* Team Workload */}
+            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column"}}>
+               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Team workload</div>
+               <div style={{display:"flex", flexDirection:"column", gap: 14, flex:1, overflowY:"auto"}} className="hide-scroll">
+                  {teamWorkload.map(tw => (
+                     <div key={tw.name} style={{display:"flex", alignItems:"center", gap: 14}}>
+                        <div style={{width: 26, height: 26, borderRadius:"50%", background:"#21262d", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
+                           {tw.name.split(" ").map(w=>w[0]).slice(0,2).join("")}
+                        </div>
+                        <div style={{flex: 1}}>
+                           <div style={{display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:5}}>
+                              <span style={{color:"#c9d1d9"}}>{tw.name}</span>
+                              <span style={{color: tw.load>100 ? "#ff7b72" : "#8b949e", fontWeight:600}}>{tw.load}%</span>
+                           </div>
+                           <div style={{height: 6, background:"#010409", borderRadius:3, overflow:"hidden", border:"1px solid #30363d"}}>
+                              <div style={{height:"100%", width:`${Math.min(tw.load, 100)}%`, background: tw.load > 100 ? "#e11d48" : tw.load >= 75 ? "#3b82f6" : "#10b981", borderRadius:3}} />
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
             </div>
           </div>
 
           {/* TIMELINE CONTROLS */}
           <div className="card" style={{padding: "16px 20px", marginBottom: 16, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
             <div style={{display:"flex", alignItems:"center", gap: 16}}>
-              <button onClick={()=>setOffset(w=>w-1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer"}}>‹</button>
+              <button onClick={()=>setOffset(w=>w-1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>‹</button>
               <div style={{fontSize: 15, fontWeight: 600, color:"#f97316", width: 200, textAlign:"center"}}>{dialLabel}</div>
-              <button onClick={()=>setOffset(w=>w+1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer"}}>›</button>
+              <button onClick={()=>setOffset(w=>w+1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>›</button>
               {offset !== 0 && <button onClick={()=>setOffset(0)} style={{background:"transparent", border:"none", color:"#3b82f6", fontSize:12, cursor:"pointer", textDecoration:"underline"}}>Today</button>}
             </div>
             
             <div style={{display:"flex", background:"#010409", border:"1px solid #30363d", borderRadius: 8, padding: 4}}>
-              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"#21262d":"transparent", color: timeView==="weekly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer"}}>Weekly</button>
-              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"#21262d":"transparent", color: timeView==="monthly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer"}}>Monthly</button>
+              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"#21262d":"transparent", color: timeView==="weekly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Weekly</button>
+              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"#21262d":"transparent", color: timeView==="monthly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Monthly</button>
             </div>
           </div>
 
           {/* TIMELINE GRID */}
           <div className="card" style={{overflow: "hidden"}}>
-            <div style={{display:"flex", background:"#21262d", borderBottom:"1px solid #30363d", padding:"12px 0"}}>
+            <div style={{display:"flex", background:"rgba(33, 38, 45, 0.5)", borderBottom:"1px solid #30363d", padding:"12px 0"}}>
               <div style={{width: 240, paddingLeft: 20, fontSize: 11, fontWeight:600, color:"#8b949e", textTransform:"uppercase", flexShrink: 0}}>Resource</div>
               <div style={{display:"flex", overflowX:"auto", flex: 1}} className="hide-scroll">
                  {periods.map((d, i) => (
@@ -533,7 +625,7 @@ export default function Dashboard(){
             <div style={{display:"flex", flexDirection:"column"}}>
               {teamViewData.map(({fn,people}) => (
                 <div key={fn}>
-                  <div style={{padding:"10px 20px", background:"#1a1f27", borderBottom:"1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                  <div style={{padding:"10px 20px", background:"rgba(26, 31, 39, 0.5)", borderBottom:"1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
                     <div>
                       <span style={{fontSize:12, fontWeight:700, color:"#3b82f6", textTransform:"uppercase"}}>{fn}</span>
                       <span style={{background:"#010409", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
