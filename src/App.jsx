@@ -22,57 +22,61 @@ const STYLE = `
   input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); cursor:pointer; opacity:0.6; }
   select option { background:#161b22; color:#c9d1d9; }
   
-  /* --- BACKGROUND & EMBERS --- */
-  .ambient-bg { position: fixed; inset: 0; z-index: -1; background: #000; overflow: hidden; }
+  /* --- BACKGROUND --- */
+  .ambient-bg { position: fixed; inset: 0; z-index: -1; background: #05070a; overflow: hidden; }
   .ambient-glow-1 {
-    position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
-    background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 60%);
-    top: -20vh; left: -10vw; animation: float 20s infinite alternate ease-in-out;
+    position: absolute; width: 80vw; height: 80vw; border-radius: 50%;
+    background: radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 50%);
+    top: -20vh; left: -20vw; filter: blur(60px);
+    animation: drift 25s infinite alternate ease-in-out;
   }
   .ambient-glow-2 {
-    position: absolute; width: 60vw; height: 60vw; border-radius: 50%;
+    position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
     background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 60%);
-    bottom: -10vh; right: -10vw; animation: float 25s infinite alternate-reverse ease-in-out;
+    bottom: -20vh; right: -10vw; filter: blur(60px);
+    animation: drift 30s infinite alternate-reverse ease-in-out;
   }
-  .ember {
-    position: absolute; background: #f97316; border-radius: 50%;
-    box-shadow: 0 0 8px #f97316, 0 0 16px #e11d48; opacity: 0; animation: rise linear infinite;
-  }
-  @keyframes float {
+  @keyframes drift {
     0% { transform: translate(0, 0) scale(1); }
-    100% { transform: translate(5vw, 5vh) scale(1.1); }
-  }
-  @keyframes rise {
-    0% { bottom: -10px; transform: translateX(0); opacity: 0; }
-    10% { opacity: 0.8; }
-    90% { opacity: 0.8; }
-    100% { bottom: 100vh; transform: translateX(-50px); opacity: 0; }
+    100% { transform: translate(5vw, -5vh) scale(1.1); }
   }
 
-  /* --- LOGO RINGS & TRAIL --- */
+  /* --- LOGO TRAIL ANIMATION --- */
   .logo-container {
     position: relative; display: flex; align-items: center; justify-content: center;
-    width: 100px; height: 100px; margin-bottom: 8px; border-radius: 50%; z-index: 5;
+    width: 75px; height: 75px; margin-bottom: 8px; border-radius: 50%; z-index: 5;
     cursor: default;
   }
   .logo-trail {
     position: absolute; top: 50%; right: 50%; transform: translateY(-50%);
-    width: 0px; height: 40px; background: linear-gradient(90deg, transparent, rgba(249,115,22,0.8));
-    filter: blur(8px); border-radius: 20px; z-index: -1;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
+    width: 0px; height: 35px; background: linear-gradient(270deg, rgba(249,115,22,0.8), transparent);
+    filter: blur(6px); border-radius: 20px; z-index: -1;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
   }
-  .logo-container:hover .logo-trail { width: 160px; right: 50%; opacity: 1; }
+  .logo-container:hover .logo-trail { width: 140px; right: 50%; opacity: 1; }
   
   .logo-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; }
   .ring-amber { border-left-color: rgba(249,115,22,0.9); border-top-color: rgba(249,115,22,0.4); animation: spin 8s linear infinite; }
-  .ring-blue { inset: 5px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4); animation: spin 12s linear infinite reverse; }
+  .ring-blue { inset: 4px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4); animation: spin 12s linear infinite reverse; }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  /* --- DATA PANELS (Dark areas) --- */
-  .sidebar { background: rgba(1, 4, 9, 0.88); backdrop-filter: blur(24px); border-right: 1px solid #30363d; }
-  .main-panel { background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(24px); }
+  /* --- DATA PANELS (Frosted Glass) --- */
+  .sidebar { background: rgba(9, 13, 20, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-right: 1px solid rgba(255,255,255,0.05); }
+  .main-panel { background: rgba(9, 13, 20, 0.3); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
   
-  .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+  .card { 
+    background: rgba(22, 27, 34, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); 
+  }
+
+  .widget-card {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  }
+  .widget-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    z-index: 10;
+  }
   
   .glow-border { position: relative; }
   .glow-border::before {
@@ -83,13 +87,13 @@ const STYLE = `
   .glow-border:hover::before { opacity: 0.8; }
 
   .ginput {
-    background: #010409; border: 1px solid #30363d; border-radius: 6px;
+    background: rgba(1, 4, 9, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
     color: #c9d1d9; font-family: inherit; outline: none; transition: all .2s;
   }
   .ginput:focus { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
   
-  .rh { transition: background .2s ease; border-bottom: 1px solid #21262d; }
-  .rh:hover { background: #1a1f27 !important; }
+  .rh { transition: background .2s ease; border-bottom: 1px solid rgba(255,255,255,0.03); }
+  .rh:hover { background: rgba(255,255,255,0.02) !important; }
   
   .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; }
   .date-cell:hover { background: rgba(255,255,255,0.06); }
@@ -97,7 +101,9 @@ const STYLE = `
   .interactive-label { transition: all 0.2s ease; cursor: pointer; }
   .interactive-label:hover { background: rgba(255,255,255,0.05); transform: translateX(2px); }
 
-  .brand-serif { font-family: 'Playfair Display', serif; }
+  .proj-item { transition: all 0.2s; }
+  .proj-item .delete-proj-btn { opacity: 0; transition: opacity 0.2s; }
+  .proj-item:hover .delete-proj-btn { opacity: 1; }
 
   @keyframes su { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fi { from{opacity:0} to{opacity:1} }
@@ -186,21 +192,12 @@ function buildSeed(){
   };
 }
 
-// ── Embers Component ──
-function Embers() {
-  const embers = useMemo(() => Array.from({length: 20}).map(() => ({
-    left: `${Math.random() * 100}%`,
-    size: `${Math.random() * 3 + 2}px`,
-    duration: `${Math.random() * 8 + 8}s`,
-    delay: `${Math.random() * 5}s`
-  })), []);
+// ── Background Ambient Component ──
+function AmbientBackground() {
   return (
     <div className="ambient-bg">
       <div className="ambient-glow-1"/>
       <div className="ambient-glow-2"/>
-      {embers.map((e, i) => (
-        <div key={i} className="ember" style={{ left: e.left, width: e.size, height: e.size, animationDuration: e.duration, animationDelay: e.delay }}/>
-      ))}
     </div>
   );
 }
@@ -209,10 +206,10 @@ function Embers() {
 function DonutChart({ data, colors }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   let cumulativePercent = 0;
-  if (total === 0) return <div style={{width: 100, height: 100, borderRadius: "50%", border: "6px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:11}}>No Data</div>;
+  if (total === 0) return <div style={{width: 90, height: 90, borderRadius: "50%", border: "4px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:11}}>No Data</div>;
 
   return (
-    <div style={{position: "relative", width: 100, height: 100, flexShrink: 0}}>
+    <div style={{position: "relative", width: 90, height: 90, flexShrink: 0}}>
       <svg viewBox="0 0 32 32" style={{transform: "rotate(-90deg)", borderRadius: "50%"}}>
         {data.map((slice) => {
           const pct = (slice.value / total) * 100;
@@ -229,8 +226,8 @@ function DonutChart({ data, colors }) {
         })}
       </svg>
       <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-        <div style={{fontSize: 18, fontWeight: 800, color:"#f0f6fc"}}>{total}</div>
-        <div style={{fontSize: 8, color:"#8b949e", textTransform:"uppercase", letterSpacing:"0.05em"}}>Items</div>
+        <div style={{fontSize: 16, fontWeight: 800, color:"#f0f6fc"}}>{total}</div>
+        <div style={{fontSize: 7, color:"#8b949e", textTransform:"uppercase", letterSpacing:"0.05em"}}>Items</div>
       </div>
     </div>
   );
@@ -244,12 +241,12 @@ function WaterCell({entries, period}){
   const cl=Math.min(tot,100);
 
   let wc = "transparent";
-  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; // Amber
-  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; // Blue
-  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; // Emerald
+  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; 
+  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; 
+  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; 
 
   return(
-    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"#010409", border:`1px solid ${over?"rgba(249,115,22,.5)":"#30363d"}`, pointerEvents:"none"}}>
+    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"rgba(0,0,0,0.4)", border:`1px solid ${over?"rgba(249,115,22,.5)":"rgba(255,255,255,0.05)"}`, pointerEvents:"none"}}>
       <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${cl}%`,background:wc,transition:"height .5s cubic-bezier(.34,1.56,.64,1)"}}/>
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
         <div style={{fontSize:10,fontWeight:700,color:tot>40?"#fff":"#8b949e"}}>{tot===0?"—":`${tot}%`}</div>
@@ -262,7 +259,6 @@ function WaterCell({entries, period}){
 function EditModal({person,fn,entries,defaultStart,onSave,onClose,onDelete,projects,getColor}){
   const [local,setLocal]=useState(entries.map(e=>({...e})));
   
-  // Use the specific date cell clicked, otherwise default to today
   const initDate = defaultStart || dStr(new Date());
   const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:initDate,end:dStr(addDays(new Date(initDate),28))}]);
   const rm=i=>setLocal(p=>p.filter((_,j)=>j!==i));
@@ -270,19 +266,19 @@ function EditModal({person,fn,entries,defaultStart,onSave,onClose,onDelete,proje
   const activeErr = local.some(l => local.filter(e => e.start <= l.start && e.end >= l.start).reduce((s,e)=>s+Number(e.pct),0) > 100);
 
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="card" style={{padding:26,width:490,maxHeight:"88vh",overflowY:"auto",animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:490,maxHeight:"88vh",overflowY:"auto",animation:"su .22s ease", background:"rgba(22, 27, 34, 0.85)"}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div>
             <div style={{fontSize:17,fontWeight:700,color:"#f0f6fc"}}>{person}</div>
             <div style={{fontSize:11,color:"#8b949e",marginTop:2}}>{fn}</div>
           </div>
-          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#8b949e",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#8b949e",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
         </div>
         
         <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:12}}>
           {local.map((entry,i)=>(
-            <div key={i} style={{background:"#010409", border:"1px solid #30363d", borderRadius:8,padding:13}}>
+            <div key={i} style={{background:"rgba(0,0,0,0.4)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:8,padding:13}}>
               <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:9}}>
                 <div style={{width:8,height:8,borderRadius:"50%",background:getColor(entry.project),flexShrink:0}}/>
                 <select value={entry.project} onChange={e=>upd(i,"project",e.target.value)} className="ginput" style={{flex:1,padding:"6px 9px",fontSize:13}}>
@@ -303,15 +299,15 @@ function EditModal({person,fn,entries,defaultStart,onSave,onClose,onDelete,proje
             </div>
           ))}
         </div>
-        <button onClick={add} style={{width:"100%",background:"transparent",border:"1.5px dashed #30363d",borderRadius:8,padding:"8px",color:"#3b82f6",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment for {initDate}</button>
+        <button onClick={add} style={{width:"100%",background:"transparent",border:"1.5px dashed rgba(255,255,255,0.1)",borderRadius:8,padding:"8px",color:"#3b82f6",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment for {new Date(initDate).toLocaleDateString("en-GB",{day:"numeric", month:"short"})}</button>
         {activeErr&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:6,padding:"9px 13px",fontSize:12,color:"#ff7b72",marginBottom:11}}>⚠ Simultaneous allocations exceed 100%.</div>}
         
         <div style={{display:"flex",gap:9,justifyContent:"space-between", alignItems:"center"}}>
           <button onClick={()=>{ if(window.confirm(`Are you sure you want to delete ${person} from the team?`)) onDelete(person, fn); }} style={{background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", borderRadius:6,padding:"8px 16px",color:"#ff7b72",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Delete Person</button>
           
           <div style={{display:"flex",gap:9}}>
-            <button onClick={onClose} style={{background:"transparent", border:"1px solid #30363d", borderRadius:6,padding:"8px 16px",color:"#8b949e",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Cancel</button>
-            <button onClick={()=>{if(!activeErr)onSave(local);}} disabled={activeErr} style={{background:activeErr?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 20px",color:activeErr?"#8b949e":"#fff",cursor:activeErr?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Save</button>
+            <button onClick={onClose} style={{background:"transparent", border:"1px solid rgba(255,255,255,0.1)", borderRadius:6,padding:"8px 16px",color:"#8b949e",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Cancel</button>
+            <button onClick={()=>{if(!activeErr)onSave(local);}} disabled={activeErr} style={{background:activeErr?"rgba(255,255,255,0.1)":"#3b82f6",border:"none",borderRadius:6,padding:"8px 20px",color:activeErr?"#8b949e":"#fff",cursor:activeErr?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Save</button>
           </div>
         </div>
       </div>
@@ -324,8 +320,8 @@ function AddProjectModal({onAdd,onClose,existing}){
   const t=name.trim().toUpperCase(); const ex=existing.includes(t);
   const allColors=[...Object.values(DEFAULT_COLORS).slice(0,8),...CPOOL.slice(0,6)];
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="card" style={{padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:340,animation:"su .22s ease", background:"rgba(22, 27, 34, 0.85)"}} onClick={e=>e.stopPropagation()}>
         <div style={{fontSize:16,fontWeight:700,color:"#f0f6fc",marginBottom:4}}>New Project</div>
         <div style={{fontSize:12,color:"#8b949e",marginBottom:18}}>Short code, e.g. ORBIT, NOVA, PULSE</div>
         <input value={name} onChange={e=>setName(e.target.value.toUpperCase())} placeholder="PROJECT CODE" className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:14,marginBottom:7,letterSpacing:".06em"}}/>
@@ -335,8 +331,8 @@ function AddProjectModal({onAdd,onClose,existing}){
           {allColors.map(c=><div key={c} onClick={()=>setColor(c)} style={{width:22,height:22,borderRadius:"50%",background:c,cursor:"pointer",border:`2px solid ${color===c?"#c9d1d9":"transparent"}`,boxShadow:color===c?"0 0 0 2px rgba(0,0,0,1)":"none",transform:color===c?"scale(1.18)":"scale(1)",transition:"transform .12s"}}/>)}
         </div>
         <div style={{display:"flex",gap:9,justifyContent:"flex-end"}}>
-          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={()=>{if(t&&!ex){onAdd(t,color);onClose();}}} disabled={!t||ex} style={{background:!t||ex?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!t||ex?"#8b949e":"#fff",cursor:!t||ex?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={()=>{if(t&&!ex){onAdd(t,color);onClose();}}} disabled={!t||ex} style={{background:!t||ex?"rgba(255,255,255,0.1)":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!t||ex?"#8b949e":"#fff",cursor:!t||ex?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add</button>
         </div>
       </div>
     </div>
@@ -347,8 +343,8 @@ function AddMemberModal({onAdd, onClose, teams}){
   const [name, setName] = useState("");
   const [team, setTeam] = useState(teams[0]);
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="card" style={{padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:340,animation:"su .22s ease", background:"rgba(22, 27, 34, 0.85)"}} onClick={e=>e.stopPropagation()}>
         <div style={{fontSize:16,fontWeight:700,color:"#f0f6fc",marginBottom:18}}>Add New Member</div>
         <div style={{fontSize:9,color:"#8b949e",marginBottom:7,textTransform:"uppercase"}}>Full Name</div>
         <input value={name} onChange={e=>setName(e.target.value)} placeholder="Jane Doe" className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:14,marginBottom:15}}/>
@@ -357,8 +353,8 @@ function AddMemberModal({onAdd, onClose, teams}){
           {teams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <div style={{display:"flex",gap:9,justifyContent:"flex-end"}}>
-          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={()=>{if(name.trim()){onAdd(name.trim(), team); onClose();}}} disabled={!name.trim()} style={{background:!name.trim()?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!name.trim()?"#8b949e":"#fff",cursor:!name.trim()?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add Member</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid rgba(255,255,255,0.1)",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={()=>{if(name.trim()){onAdd(name.trim(), team); onClose();}}} disabled={!name.trim()} style={{background:!name.trim()?"rgba(255,255,255,0.1)":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!name.trim()?"#8b949e":"#fff",cursor:!name.trim()?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add Member</button>
         </div>
       </div>
     </div>
@@ -464,16 +460,16 @@ export default function Dashboard(){
         totalLoad += Math.max(...periods.map(d => allocW(entries, d)), 0);
       });
       return { name: teamName, load: Math.round(totalLoad / members.length) };
-    }).sort((a,b) => b.load - a.load).filter(t => t.load > 0).slice(0, 6);
+    }).sort((a,b) => b.load - a.load).filter(t => t.load > 0).slice(0, 4);
   }, [functions, allocations, periods]);
 
-  // WIDGET DATA: Member Workload (Top 6 individuals)
+  // WIDGET DATA: Member Workload (Top individuals)
   const memberWorkloadList = useMemo(() => {
     return allPeople.map(p => {
       const entries = allocations[p.name] || [];
       const maxAlloc = Math.max(...periods.map(d => allocW(entries, d)), 0);
       return { name: p.name, load: maxAlloc };
-    }).sort((a,b) => b.load - a.load).slice(0, 6);
+    }).sort((a,b) => b.load - a.load).slice(0, 4);
   }, [allPeople, allocations, periods]);
 
   function saveAlloc(name, entries){
@@ -485,6 +481,19 @@ export default function Dashboard(){
     const newProj = [...projects, name];
     const newColors = {...pColors, [name]: color};
     setProjects(newProj); setPColors(newColors); syncToDatabase(newProj, allocations, newColors, functions);
+  }
+
+  function deleteProject(targetProject) {
+    if(!window.confirm(`Are you sure you want to delete ${targetProject}? This will remove it from everyone's schedule.`)) return;
+    const newProjects = projects.filter(p => p !== targetProject);
+    const newColors = { ...pColors }; delete newColors[targetProject];
+    const newAllocations = { ...allocations };
+    Object.keys(newAllocations).forEach(person => {
+      newAllocations[person] = newAllocations[person].filter(e => e.project !== targetProject);
+    });
+    setProjects(newProjects); setPColors(newColors); setAllocations(newAllocations);
+    if(filterProj === targetProject) setFilterProj(null);
+    syncToDatabase(newProjects, newAllocations, newColors, functions);
   }
 
   function addMember(name, team){
@@ -510,44 +519,47 @@ export default function Dashboard(){
     syncToDatabase(projects, newAllocations, pColors, newFunctions);
   }
 
-  if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0d1117", color:"#f97316"}}>Booting Systems...</div>;
+  if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#05070a", color:"#f97316"}}>Booting Systems...</div>;
 
   return(
     <div style={{display:"flex", minHeight:"100vh", position:"relative"}}>
       <style>{STYLE}</style>
-      <Embers />
+      <AmbientBackground />
 
       {/* --- LEFT SIDEBAR (PROJECTS) --- */}
       <div className="sidebar" style={{width: 260, display:"flex", flexDirection:"column", zIndex:10}}>
         
         {/* SMALLER LOGO & TRAIL */}
-        <div style={{padding: "36px 20px 30px", borderBottom: "1px solid #30363d", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
+        <div style={{padding: "30px 20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
           <div className="logo-container">
              <div className="logo-trail" />
              <div className="logo-ring ring-amber" />
              <div className="logo-ring ring-blue" />
              <div style={{textAlign:"center", zIndex:2}}>
-               <div style={{fontFamily:"'Inter', sans-serif", fontWeight:800, fontSize:15, color:"#fff", letterSpacing:1}}>STUDIO<span style={{color:"#8b949e", fontWeight:300}}>137</span></div>
+               <div style={{fontFamily:"'Inter', sans-serif", fontWeight:800, fontSize:13, color:"#fff", letterSpacing:1}}>STUDIO<span style={{color:"#8b949e", fontWeight:300}}>137</span></div>
              </div>
           </div>
-          <div style={{fontSize:8, color:"#f97316", textTransform:"uppercase", letterSpacing:2, fontWeight:700, textAlign:"center"}}>Digital Media Solutions</div>
+          <div style={{fontSize:7, color:"#f97316", textTransform:"uppercase", letterSpacing:2, fontWeight:700, textAlign:"center", marginTop: 4}}>Digital Media Solutions</div>
         </div>
         
         <div style={{padding: "20px", flex: 1, overflowY: "auto"}}>
           <div style={{fontSize: 12, fontWeight: 600, color: "#8b949e", marginBottom: 12, textTransform: "uppercase"}}>Active Projects</div>
           <div style={{display:"flex", flexDirection:"column", gap: 6}}>
-            <button onClick={()=>setFilterProj(null)} style={{textAlign:"left", background: !filterProj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6, color: !filterProj ? "#fff" : "#8b949e", cursor:"pointer", fontSize: 13, fontWeight: !filterProj ? 600 : 400, transition:"all 0.2s"}}>
+            <button onClick={()=>setFilterProj(null)} style={{textAlign:"left", background: !filterProj ? "rgba(255,255,255,0.05)" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6, color: !filterProj ? "#fff" : "#8b949e", cursor:"pointer", fontSize: 13, fontWeight: !filterProj ? 600 : 400, transition:"all 0.2s"}}>
               All Projects
             </button>
             {projects.map(proj => (
-              <button key={proj} onClick={()=>setFilterProj(filterProj===proj ? null : proj)} style={{
-                textAlign:"left", display:"flex", alignItems:"center", gap: 8,
-                background: filterProj===proj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6,
-                color: filterProj===proj ? "#fff" : "#c9d1d9", cursor:"pointer", fontSize: 13, transition:"all 0.2s"
-              }}>
-                <span style={{width: 8, height: 8, borderRadius: "50%", background: getColor(proj), boxShadow: filterProj===proj ? `0 0 8px ${getColor(proj)}` : 'none'}}/>
-                {proj}
-              </button>
+              <div key={proj} className="proj-item" style={{display:"flex", alignItems:"center", background: filterProj===proj ? "rgba(255,255,255,0.05)" : "transparent", borderRadius: 6, paddingRight: 8}}>
+                <button onClick={()=>setFilterProj(filterProj===proj ? null : proj)} style={{
+                  flex: 1, textAlign:"left", display:"flex", alignItems:"center", gap: 8,
+                  background: "transparent", border:"none", padding:"8px 12px",
+                  color: filterProj===proj ? "#fff" : "#c9d1d9", cursor:"pointer", fontSize: 13, transition:"all 0.2s"
+                }}>
+                  <span style={{width: 8, height: 8, borderRadius: "50%", background: getColor(proj), boxShadow: filterProj===proj ? `0 0 8px ${getColor(proj)}` : 'none'}}/>
+                  {proj}
+                </button>
+                <button onClick={()=>deleteProject(proj)} className="delete-proj-btn" style={{background:"transparent", border:"none", color:"#8b949e", cursor:"pointer", padding:"4px", fontSize: 12}}>🗑️</button>
+              </div>
             ))}
           </div>
         </div>
@@ -557,8 +569,8 @@ export default function Dashboard(){
       <div className="main-panel" style={{flex: 1, display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden", zIndex:10}}>
         
         {/* Top Header */}
-        <div style={{padding: "20px 30px", borderBottom: "1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search resources..." className="ginput" style={{padding: "10px 16px", fontSize: 14, width: 280, background:"rgba(1,4,9,0.5)"}}/>
+        <div style={{padding: "20px 30px", borderBottom: "1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search resources..." className="ginput" style={{padding: "10px 16px", fontSize: 14, width: 280, background:"rgba(0,0,0,0.4)"}}/>
           <div style={{display:"flex", gap: 12}}>
              <button onClick={()=>setAddingMember(true)} className="card" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600}}>+ Add Member</button>
              <button onClick={()=>setAddingProj(true)} className="card glow-border" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600, border:"none"}}>+ Add Project</button>
@@ -572,14 +584,14 @@ export default function Dashboard(){
           <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginBottom: 24}}>
             
             {/* 1. Status Overview */}
-            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
+            <div className="card widget-card" style={{padding: 24, display:"flex", flexDirection:"column", height: 190}}>
               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Status overview</div>
               <div style={{display:"flex", alignItems:"center", gap: 20, flex: 1}}>
                 <DonutChart data={chartData} colors={pColors} />
-                <div style={{display:"grid", gridTemplateColumns:"1fr", gap: "8px", flex: 1, maxHeight: 120, overflowY:"auto"}} className="hide-scroll">
+                <div style={{display:"grid", gridTemplateColumns:"1fr", gap: "6px", flex: 1, maxHeight: 110, overflowY:"auto"}} className="hide-scroll">
                   {chartData.map(d => (
                     <div key={d.label} onClick={() => setFilterProj(filterProj === d.label ? null : d.label)} className="interactive-label" style={{
-                       display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:11, padding:"6px 10px", borderRadius:6,
+                       display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:11, padding:"4px 8px", borderRadius:6,
                        background: filterProj === d.label ? `${getColor(d.label)}22` : "transparent",
                        border: filterProj === d.label ? `1px solid ${getColor(d.label)}` : "1px solid transparent"
                      }}>
@@ -595,21 +607,21 @@ export default function Dashboard(){
             </div>
 
             {/* 2. Team Workload */}
-            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
+            <div className="card widget-card" style={{padding: 24, display:"flex", flexDirection:"column", height: 190}}>
                <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Team workload</div>
-               <div style={{display:"flex", flexDirection:"column", gap: 14, flex:1, overflowY:"auto"}} className="hide-scroll">
+               <div style={{display:"flex", flexDirection:"column", gap: 12, flex:1, overflowY:"auto"}} className="hide-scroll">
                   {teamWorkloadList.map(tw => (
-                     <div key={tw.name} style={{display:"flex", alignItems:"center", gap: 14}}>
-                        <div style={{width: 26, height: 26, borderRadius:"4px", background:"#21262d", color:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
+                     <div key={tw.name} style={{display:"flex", alignItems:"center", gap: 12}}>
+                        <div style={{width: 24, height: 24, borderRadius:"4px", background:"rgba(255,255,255,0.05)", color:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, flexShrink:0}}>
                            {tw.name.substring(0,2).toUpperCase()}
                         </div>
                         <div style={{flex: 1}}>
-                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:5}}>
+                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:4}}>
                               <span style={{color:"#c9d1d9"}}>{tw.name}</span>
                               <span style={{color: tw.load>100 ? "#ff7b72" : "#8b949e", fontWeight:600}}>{tw.load}%</span>
                            </div>
-                           <div style={{height: 6, background:"#010409", borderRadius:3, overflow:"hidden", border:"1px solid #30363d"}}>
-                              <div style={{height:"100%", width:`${Math.min(tw.load, 100)}%`, background: tw.load > 100 ? "#e11d48" : tw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:3}} />
+                           <div style={{height: 4, background:"rgba(0,0,0,0.4)", borderRadius:2, overflow:"hidden", border:"1px solid rgba(255,255,255,0.05)"}}>
+                              <div style={{height:"100%", width:`${Math.min(tw.load, 100)}%`, background: tw.load > 100 ? "#e11d48" : tw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:2}} />
                            </div>
                         </div>
                      </div>
@@ -618,21 +630,21 @@ export default function Dashboard(){
             </div>
             
             {/* 3. Member Workload */}
-            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
+            <div className="card widget-card" style={{padding: 24, display:"flex", flexDirection:"column", height: 190}}>
                <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Member workload</div>
-               <div style={{display:"flex", flexDirection:"column", gap: 14, flex:1, overflowY:"auto"}} className="hide-scroll">
+               <div style={{display:"flex", flexDirection:"column", gap: 12, flex:1, overflowY:"auto"}} className="hide-scroll">
                   {memberWorkloadList.map(mw => (
-                     <div key={mw.name} style={{display:"flex", alignItems:"center", gap: 14}}>
-                        <div style={{width: 26, height: 26, borderRadius:"50%", background:"#21262d", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
+                     <div key={mw.name} style={{display:"flex", alignItems:"center", gap: 12}}>
+                        <div style={{width: 24, height: 24, borderRadius:"50%", background:"rgba(255,255,255,0.05)", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, flexShrink:0}}>
                            {mw.name.split(" ").map(w=>w[0]).slice(0,2).join("")}
                         </div>
                         <div style={{flex: 1}}>
-                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:5}}>
+                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:4}}>
                               <span style={{color:"#c9d1d9"}}>{mw.name}</span>
                               <span style={{color: mw.load>100 ? "#ff7b72" : "#8b949e", fontWeight:600}}>{mw.load}%</span>
                            </div>
-                           <div style={{height: 6, background:"#010409", borderRadius:3, overflow:"hidden", border:"1px solid #30363d"}}>
-                              <div style={{height:"100%", width:`${Math.min(mw.load, 100)}%`, background: mw.load > 100 ? "#e11d48" : mw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:3}} />
+                           <div style={{height: 4, background:"rgba(0,0,0,0.4)", borderRadius:2, overflow:"hidden", border:"1px solid rgba(255,255,255,0.05)"}}>
+                              <div style={{height:"100%", width:`${Math.min(mw.load, 100)}%`, background: mw.load > 100 ? "#e11d48" : mw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:2}} />
                            </div>
                         </div>
                      </div>
@@ -645,21 +657,21 @@ export default function Dashboard(){
           {/* TIMELINE CONTROLS */}
           <div className="card" style={{padding: "16px 20px", marginBottom: 16, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
             <div style={{display:"flex", alignItems:"center", gap: 16}}>
-              <button onClick={()=>setOffset(w=>w-1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>‹</button>
+              <button onClick={()=>setOffset(w=>w-1)} style={{background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>‹</button>
               <div style={{fontSize: 15, fontWeight: 600, color:"#f97316", width: 200, textAlign:"center"}}>{dialLabel}</div>
-              <button onClick={()=>setOffset(w=>w+1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>›</button>
+              <button onClick={()=>setOffset(w=>w+1)} style={{background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer", transition:"all 0.2s"}}>›</button>
               {offset !== 0 && <button onClick={()=>setOffset(0)} style={{background:"transparent", border:"none", color:"#3b82f6", fontSize:12, cursor:"pointer", textDecoration:"underline"}}>Today</button>}
             </div>
             
-            <div style={{display:"flex", background:"#010409", border:"1px solid #30363d", borderRadius: 8, padding: 4}}>
-              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"#21262d":"transparent", color: timeView==="weekly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Weekly</button>
-              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"#21262d":"transparent", color: timeView==="monthly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Monthly</button>
+            <div style={{display:"flex", background:"rgba(0,0,0,0.4)", border:"1px solid rgba(255,255,255,0.05)", borderRadius: 8, padding: 4}}>
+              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"rgba(255,255,255,0.1)":"transparent", color: timeView==="weekly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Weekly</button>
+              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"rgba(255,255,255,0.1)":"transparent", color: timeView==="monthly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.2s"}}>Monthly</button>
             </div>
           </div>
 
           {/* TIMELINE GRID */}
           <div className="card" style={{overflow: "hidden"}}>
-            <div style={{display:"flex", background:"rgba(33, 38, 45, 0.5)", borderBottom:"1px solid #30363d", padding:"12px 0"}}>
+            <div style={{display:"flex", background:"rgba(255, 255, 255, 0.03)", borderBottom:"1px solid rgba(255,255,255,0.05)", padding:"12px 0"}}>
               <div style={{width: 240, paddingLeft: 20, fontSize: 11, fontWeight:600, color:"#8b949e", textTransform:"uppercase", flexShrink: 0}}>Resource</div>
               <div style={{display:"flex", overflowX:"auto", flex: 1}} className="hide-scroll">
                  {periods.map((d, i) => (
@@ -671,10 +683,10 @@ export default function Dashboard(){
             <div style={{display:"flex", flexDirection:"column"}}>
               {teamViewData.map(({fn,people}) => (
                 <div key={fn}>
-                  <div style={{padding:"10px 20px", background:"rgba(26, 31, 39, 0.5)", borderBottom:"1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                  <div style={{padding:"10px 20px", background:"rgba(0, 0, 0, 0.2)", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
                     <div>
                       <span style={{fontSize:12, fontWeight:700, color:"#3b82f6", textTransform:"uppercase"}}>{fn}</span>
-                      <span style={{background:"#010409", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
+                      <span style={{background:"rgba(0,0,0,0.6)", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
                     </div>
                     <button onClick={(e)=>{ e.stopPropagation(); deleteTeam(fn); }} style={{background:"transparent", border:"none", color:"#8b949e", cursor:"pointer", fontSize:12}}>🗑️</button>
                   </div>
@@ -684,7 +696,7 @@ export default function Dashboard(){
                       <div key={name} className="rh" style={{display:"flex", alignItems:"center"}}>
                         
                         <div onClick={()=>setEditing({name,fn})} style={{width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0, cursor:"pointer"}}>
-                          <div style={{width:28, height:28, borderRadius:"50%", background:"#21262d", border:"1px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
+                          <div style={{width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
                             {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
                           </div>
                           <div style={{fontSize:13, fontWeight:500, color:"#f0f6fc"}}>{name}</div>
