@@ -8,7 +8,7 @@ const STYLE = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   
   body {
-    background: #000;
+    background: #050a15;
     color: #c9d1d9;
     font-family: 'Inter', sans-serif;
     overflow-x: hidden;
@@ -23,16 +23,20 @@ const STYLE = `
   select option { background:#161b22; color:#c9d1d9; }
   
   /* --- BACKGROUND --- */
-  .ambient-bg { position: fixed; inset: 0; z-index: -1; background: #05070a; overflow: hidden; }
+  .ambient-bg { 
+    position: fixed; inset: 0; z-index: -1; 
+    background: linear-gradient(135deg, #050f24 0%, #08080a 50%, #240f05 100%); 
+    overflow: hidden; 
+  }
   .ambient-glow-1 {
     position: absolute; width: 80vw; height: 80vw; border-radius: 50%;
-    background: radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 50%);
+    background: radial-gradient(circle, rgba(249,115,22,0.25) 0%, transparent 55%);
     top: -20vh; left: -20vw; filter: blur(60px);
     animation: drift 25s infinite alternate ease-in-out;
   }
   .ambient-glow-2 {
     position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
-    background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 60%);
+    background: radial-gradient(circle, rgba(59,130,246,0.25) 0%, transparent 60%);
     bottom: -20vh; right: -10vw; filter: blur(60px);
     animation: drift 30s infinite alternate-reverse ease-in-out;
   }
@@ -41,41 +45,36 @@ const STYLE = `
     100% { transform: translate(5vw, -5vh) scale(1.1); }
   }
 
-  /* --- LOGO TRAIL ANIMATION --- */
+  /* --- LOGO RINGS --- */
   .logo-container {
     position: relative; display: flex; align-items: center; justify-content: center;
     width: 75px; height: 75px; margin-bottom: 8px; border-radius: 50%; z-index: 5;
     cursor: default;
   }
-  .logo-trail {
-    position: absolute; top: 50%; right: 50%; transform: translateY(-50%);
-    width: 0px; height: 35px; background: linear-gradient(270deg, rgba(249,115,22,0.8), transparent);
-    filter: blur(6px); border-radius: 20px; z-index: -1;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
-  }
-  .logo-container:hover .logo-trail { width: 140px; right: 50%; opacity: 1; }
-  
   .logo-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; }
   .ring-amber { border-left-color: rgba(249,115,22,0.9); border-top-color: rgba(249,115,22,0.4); animation: spin 8s linear infinite; }
   .ring-blue { inset: 4px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4); animation: spin 12s linear infinite reverse; }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
-  /* --- DATA PANELS (Frosted Glass) --- */
-  .sidebar { background: rgba(9, 13, 20, 0.5); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border-right: 1px solid rgba(255,255,255,0.05); }
-  .main-panel { background: rgba(9, 13, 20, 0.3); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+  /* --- DATA PANELS (True Frosted Glass) --- */
+  .sidebar { 
+    background: rgba(10, 15, 25, 0.4); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+    border-right: 1px solid rgba(255,255,255,0.08); 
+  }
+  .main-panel { 
+    background: rgba(10, 15, 25, 0.2); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); 
+  }
   
   .card { 
-    background: rgba(22, 27, 34, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255,255,255,0.05); border-radius: 10px; box-shadow: 0 4px 24px rgba(0,0,0,0.4); 
+    background: rgba(20, 25, 35, 0.45); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
   }
 
   .widget-card {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
   }
   .widget-card:hover {
-    transform: scale(1.02);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.6);
-    z-index: 10;
+    transform: scale(1.02); box-shadow: 0 12px 32px rgba(0,0,0,0.6); z-index: 10;
   }
   
   .glow-border { position: relative; }
@@ -87,19 +86,20 @@ const STYLE = `
   .glow-border:hover::before { opacity: 0.8; }
 
   .ginput {
-    background: rgba(1, 4, 9, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
+    background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;
     color: #c9d1d9; font-family: inherit; outline: none; transition: all .2s;
   }
   .ginput:focus { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
   
   .rh { transition: background .2s ease; border-bottom: 1px solid rgba(255,255,255,0.03); }
-  .rh:hover { background: rgba(255,255,255,0.02) !important; }
+  .rh:hover { background: rgba(255,255,255,0.05) !important; }
   
   .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; }
-  .date-cell:hover { background: rgba(255,255,255,0.06); }
+  .date-cell:hover { background: rgba(255,255,255,0.08); }
 
-  .interactive-label { transition: all 0.2s ease; cursor: pointer; }
-  .interactive-label:hover { background: rgba(255,255,255,0.05); transform: translateX(2px); }
+  /* New unified hover magnification for lists */
+  .hover-magnify { transition: all 0.2s ease; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
+  .hover-magnify:hover { background: rgba(255,255,255,0.06); transform: scale(1.03); }
 
   .proj-item { transition: all 0.2s; }
   .proj-item .delete-proj-btn { opacity: 0; transition: opacity 0.2s; }
@@ -501,14 +501,6 @@ export default function Dashboard(){
     setFunctions(newFuncs); syncToDatabase(projects, allocations, pColors, newFuncs);
   }
 
-  function deleteMember(targetMember, targetTeam) {
-    const newFunctions = { ...functions };
-    if (newFunctions[targetTeam]) newFunctions[targetTeam] = newFunctions[targetTeam].filter(n => n !== targetMember);
-    const newAllocations = { ...allocations }; delete newAllocations[targetMember];
-    setFunctions(newFunctions); setAllocations(newAllocations);
-    syncToDatabase(projects, newAllocations, pColors, newFunctions); setEditing(null); 
-  }
-
   function deleteTeam(targetTeam) {
     if(!window.confirm(`Are you sure you want to delete the "${targetTeam}" team?`)) return;
     const newFunctions = { ...functions };
@@ -519,7 +511,7 @@ export default function Dashboard(){
     syncToDatabase(projects, newAllocations, pColors, newFunctions);
   }
 
-  if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#05070a", color:"#f97316"}}>Booting Systems...</div>;
+  if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#050a15", color:"#f97316"}}>Booting Systems...</div>;
 
   return(
     <div style={{display:"flex", minHeight:"100vh", position:"relative"}}>
@@ -529,10 +521,9 @@ export default function Dashboard(){
       {/* --- LEFT SIDEBAR (PROJECTS) --- */}
       <div className="sidebar" style={{width: 260, display:"flex", flexDirection:"column", zIndex:10}}>
         
-        {/* SMALLER LOGO & TRAIL */}
+        {/* SMALLER LOGO */}
         <div style={{padding: "30px 20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
           <div className="logo-container">
-             <div className="logo-trail" />
              <div className="logo-ring ring-amber" />
              <div className="logo-ring ring-blue" />
              <div style={{textAlign:"center", zIndex:2}}>
@@ -609,9 +600,9 @@ export default function Dashboard(){
             {/* 2. Team Workload */}
             <div className="card widget-card" style={{padding: 24, display:"flex", flexDirection:"column", height: 190}}>
                <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Team workload</div>
-               <div style={{display:"flex", flexDirection:"column", gap: 12, flex:1, overflowY:"auto"}} className="hide-scroll">
+               <div style={{display:"flex", flexDirection:"column", gap: 8, flex:1, overflowY:"auto"}} className="hide-scroll">
                   {teamWorkloadList.map(tw => (
-                     <div key={tw.name} style={{display:"flex", alignItems:"center", gap: 12}}>
+                     <div key={tw.name} className="hover-magnify" style={{display:"flex", alignItems:"center", gap: 12}}>
                         <div style={{width: 24, height: 24, borderRadius:"4px", background:"rgba(255,255,255,0.05)", color:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, flexShrink:0}}>
                            {tw.name.substring(0,2).toUpperCase()}
                         </div>
@@ -632,9 +623,9 @@ export default function Dashboard(){
             {/* 3. Member Workload */}
             <div className="card widget-card" style={{padding: 24, display:"flex", flexDirection:"column", height: 190}}>
                <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Member workload</div>
-               <div style={{display:"flex", flexDirection:"column", gap: 12, flex:1, overflowY:"auto"}} className="hide-scroll">
+               <div style={{display:"flex", flexDirection:"column", gap: 8, flex:1, overflowY:"auto"}} className="hide-scroll">
                   {memberWorkloadList.map(mw => (
-                     <div key={mw.name} style={{display:"flex", alignItems:"center", gap: 12}}>
+                     <div key={mw.name} className="hover-magnify" style={{display:"flex", alignItems:"center", gap: 12}}>
                         <div style={{width: 24, height: 24, borderRadius:"50%", background:"rgba(255,255,255,0.05)", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:700, flexShrink:0}}>
                            {mw.name.split(" ").map(w=>w[0]).slice(0,2).join("")}
                         </div>
@@ -669,52 +660,65 @@ export default function Dashboard(){
             </div>
           </div>
 
-          {/* TIMELINE GRID */}
-          <div className="card" style={{overflow: "hidden"}}>
-            <div style={{display:"flex", background:"rgba(255, 255, 255, 0.03)", borderBottom:"1px solid rgba(255,255,255,0.05)", padding:"12px 0"}}>
-              <div style={{width: 240, paddingLeft: 20, fontSize: 11, fontWeight:600, color:"#8b949e", textTransform:"uppercase", flexShrink: 0}}>Resource</div>
-              <div style={{display:"flex", overflowX:"auto", flex: 1}} className="hide-scroll">
-                 {periods.map((d, i) => (
-                   <div key={i} style={{width: 58, flexShrink: 0, textAlign:"center", fontSize: 11, color:"#c9d1d9"}}>{d.label}</div>
-                 ))}
-              </div>
-            </div>
-            
-            <div style={{display:"flex", flexDirection:"column"}}>
-              {teamViewData.map(({fn,people}) => (
-                <div key={fn}>
-                  <div style={{padding:"10px 20px", background:"rgba(0, 0, 0, 0.2)", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-                    <div>
-                      <span style={{fontSize:12, fontWeight:700, color:"#3b82f6", textTransform:"uppercase"}}>{fn}</span>
-                      <span style={{background:"rgba(0,0,0,0.6)", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
-                    </div>
-                    <button onClick={(e)=>{ e.stopPropagation(); deleteTeam(fn); }} style={{background:"transparent", border:"none", color:"#8b949e", cursor:"pointer", fontSize:12}}>🗑️</button>
-                  </div>
-                  {people.map(name => {
-                    const entries = allocations[name]||[];
-                    return (
-                      <div key={name} className="rh" style={{display:"flex", alignItems:"center"}}>
-                        
-                        <div onClick={()=>setEditing({name,fn})} style={{width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0, cursor:"pointer"}}>
-                          <div style={{width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
-                            {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
-                          </div>
-                          <div style={{fontSize:13, fontWeight:500, color:"#f0f6fc"}}>{name}</div>
-                        </div>
-                        
-                        <div style={{display:"flex", overflowX:"auto", flex: 1, padding:"8px 0"}} className="hide-scroll">
-                          {periods.map((d, i) => (
-                            <div key={i} onClick={()=>setEditing({name, fn, defaultStart: dStr(d.start)})} className="date-cell" style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
-                              <WaterCell entries={entries} period={d} />
-                            </div>
-                          ))}
-                        </div>
-                        
-                      </div>
-                    );
-                  })}
+          {/* UNIFIED TIMELINE GRID (Synchronized Scrolling) */}
+          <div className="card" style={{overflowX: "auto", overflowY: "hidden", display:"flex", flexDirection:"column"}}>
+            <div style={{minWidth: "max-content"}}>
+              
+              {/* Header Row */}
+              <div style={{display:"flex", background:"rgba(255, 255, 255, 0.03)", borderBottom:"1px solid rgba(255,255,255,0.05)", padding:"12px 0"}}>
+                <div style={{position:"sticky", left:0, zIndex:2, width: 240, paddingLeft: 20, fontSize: 11, fontWeight:600, color:"#8b949e", textTransform:"uppercase", flexShrink: 0, background:"rgba(15, 20, 30, 0.95)", borderRight:"1px solid rgba(255,255,255,0.05)", display:"flex", alignItems:"center"}}>Resource</div>
+                <div style={{display:"flex"}}>
+                   {periods.map((d, i) => (
+                     <div key={i} style={{width: 58, flexShrink: 0, textAlign:"center", fontSize: 11, color:"#c9d1d9"}}>{d.label}</div>
+                   ))}
                 </div>
-              ))}
+              </div>
+              
+              {/* Content Rows */}
+              <div style={{display:"flex", flexDirection:"column"}}>
+                {teamViewData.map(({fn,people}) => (
+                  <div key={fn}>
+                    {/* Team Header Row */}
+                    <div style={{background:"rgba(0, 0, 0, 0.3)", borderBottom:"1px solid rgba(255,255,255,0.05)", display:"flex", width:"100%"}}>
+                      <div style={{position:"sticky", left:0, zIndex:2, padding:"10px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", width: 240, background:"rgba(10, 15, 25, 0.95)", borderRight:"1px solid rgba(255,255,255,0.05)"}}>
+                        <div>
+                          <span style={{fontSize:12, fontWeight:700, color:"#3b82f6", textTransform:"uppercase"}}>{fn}</span>
+                          <span style={{background:"rgba(0,0,0,0.6)", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
+                        </div>
+                        <button onClick={(e)=>{ e.stopPropagation(); deleteTeam(fn); }} style={{background:"transparent", border:"none", color:"#8b949e", cursor:"pointer", fontSize:12}}>🗑️</button>
+                      </div>
+                    </div>
+                    
+                    {/* Member Rows */}
+                    {people.map(name => {
+                      const entries = allocations[name]||[];
+                      return (
+                        <div key={name} className="rh" style={{display:"flex", alignItems:"center", width:"100%"}}>
+                          
+                          {/* Sticky Member Column */}
+                          <div onClick={()=>setEditing({name,fn})} style={{position:"sticky", left:0, zIndex:2, width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0, cursor:"pointer", background:"rgba(15, 20, 30, 0.95)", borderRight:"1px solid rgba(255,255,255,0.05)"}}>
+                            <div style={{width:28, height:28, borderRadius:"50%", background:"rgba(255,255,255,0.05)", border:"1px solid rgba(255,255,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
+                              {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
+                            </div>
+                            <div style={{fontSize:13, fontWeight:500, color:"#f0f6fc"}}>{name}</div>
+                          </div>
+                          
+                          {/* Scrollable Data Cells */}
+                          <div style={{display:"flex", padding:"8px 0"}}>
+                            {periods.map((d, i) => (
+                              <div key={i} onClick={()=>setEditing({name, fn, defaultStart: dStr(d.start)})} className="date-cell" style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
+                                <WaterCell entries={entries} period={d} />
+                              </div>
+                            ))}
+                          </div>
+                          
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+
             </div>
           </div>
           
