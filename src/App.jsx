@@ -23,10 +23,7 @@ const STYLE = `
   select option { background:#161b22; color:#c9d1d9; }
   
   /* --- BACKGROUND & EMBERS --- */
-  .ambient-bg {
-    position: fixed; inset: 0; z-index: -1;
-    background: #000; overflow: hidden;
-  }
+  .ambient-bg { position: fixed; inset: 0; z-index: -1; background: #000; overflow: hidden; }
   .ambient-glow-1 {
     position: absolute; width: 70vw; height: 70vw; border-radius: 50%;
     background: radial-gradient(circle, rgba(249,115,22,0.12) 0%, transparent 60%);
@@ -39,8 +36,7 @@ const STYLE = `
   }
   .ember {
     position: absolute; background: #f97316; border-radius: 50%;
-    box-shadow: 0 0 8px #f97316, 0 0 16px #e11d48;
-    opacity: 0; animation: rise linear infinite;
+    box-shadow: 0 0 8px #f97316, 0 0 16px #e11d48; opacity: 0; animation: rise linear infinite;
   }
   @keyframes float {
     0% { transform: translate(0, 0) scale(1); }
@@ -53,26 +49,30 @@ const STYLE = `
     100% { bottom: 100vh; transform: translateX(-50px); opacity: 0; }
   }
 
-  /* --- LOGO RINGS --- */
+  /* --- LOGO RINGS & TRAIL --- */
+  .logo-container {
+    position: relative; display: flex; align-items: center; justify-content: center;
+    width: 100px; height: 100px; margin-bottom: 8px; border-radius: 50%; z-index: 5;
+    cursor: default;
+  }
+  .logo-trail {
+    position: absolute; top: 50%; right: 50%; transform: translateY(-50%);
+    width: 0px; height: 40px; background: linear-gradient(90deg, transparent, rgba(249,115,22,0.8));
+    filter: blur(8px); border-radius: 20px; z-index: -1;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0; pointer-events: none;
+  }
+  .logo-container:hover .logo-trail { width: 160px; right: 50%; opacity: 1; }
+  
   .logo-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid transparent; }
-  .ring-amber {
-    border-left-color: rgba(249,115,22,0.9); border-top-color: rgba(249,115,22,0.4);
-    animation: spin 8s linear infinite;
-  }
-  .ring-blue {
-    inset: 6px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4);
-    animation: spin 12s linear infinite reverse;
-  }
+  .ring-amber { border-left-color: rgba(249,115,22,0.9); border-top-color: rgba(249,115,22,0.4); animation: spin 8s linear infinite; }
+  .ring-blue { inset: 5px; border-right-color: rgba(59,130,246,0.9); border-bottom-color: rgba(59,130,246,0.4); animation: spin 12s linear infinite reverse; }
   @keyframes spin { 100% { transform: rotate(360deg); } }
 
   /* --- DATA PANELS (Dark areas) --- */
   .sidebar { background: rgba(1, 4, 9, 0.88); backdrop-filter: blur(24px); border-right: 1px solid #30363d; }
   .main-panel { background: rgba(13, 17, 23, 0.88); backdrop-filter: blur(24px); }
   
-  .card {
-    background: #161b22; border: 1px solid #30363d;
-    border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-  }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
   
   .glow-border { position: relative; }
   .glow-border::before {
@@ -88,11 +88,16 @@ const STYLE = `
   }
   .ginput:focus { border-color: #f97316; box-shadow: 0 0 0 1px #f97316; }
   
-  .rh { transition: background .2s ease; border-bottom: 1px solid #21262d; cursor: pointer; }
-  .rh:hover { background: #21262d !important; }
+  .rh { transition: background .2s ease; border-bottom: 1px solid #21262d; }
+  .rh:hover { background: #1a1f27 !important; }
   
+  .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; }
+  .date-cell:hover { background: rgba(255,255,255,0.06); }
+
   .interactive-label { transition: all 0.2s ease; cursor: pointer; }
   .interactive-label:hover { background: rgba(255,255,255,0.05); transform: translateX(2px); }
+
+  .brand-serif { font-family: 'Playfair Display', serif; }
 
   @keyframes su { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fi { from{opacity:0} to{opacity:1} }
@@ -118,7 +123,6 @@ const DEFAULT_COLORS = {
 };
 const CPOOL = ["#e11d48","#0891b2","#15803d","#b45309","#7c3aed","#be185d","#0369a1","#047857","#92400e","#065f46"];
 
-const APR1 = "2026-04-01";
 function dStr(d){return d instanceof Date?d.toISOString().slice(0,10):d;}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
 function getMon(d){const x=new Date(d);x.setHours(0,0,0,0);const dy=x.getDay();x.setDate(x.getDate()+(dy===0?-6:1-dy));return x;}
@@ -144,7 +148,8 @@ function active(e, period){return new Date(e.start) <= period.end && new Date(e.
 function allocW(entries, period){return (entries||[]).filter(e=>active(e,period)).reduce((s,e)=>s+Number(e.pct),0);}
 
 function buildSeed(){
-  const e=n=>dStr(addDays(new Date(APR1),n*7));
+  const APR1 = dStr(new Date());
+  const e=n=>dStr(addDays(new Date(),n*7));
   return {
     "Jahangir":        [{project:"MTF",pct:50,start:APR1,end:e(8)},{project:"NSA",pct:25,start:APR1,end:e(4)},{project:"BCW",pct:25,start:APR1,end:e(10)}],
     "Nabeel":          [{project:"APEST",pct:75,start:APR1,end:e(6)},{project:"TL",pct:25,start:APR1,end:e(4)}],
@@ -204,10 +209,10 @@ function Embers() {
 function DonutChart({ data, colors }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   let cumulativePercent = 0;
-  if (total === 0) return <div style={{width: 140, height: 140, borderRadius: "50%", border: "8px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:12}}>No Data</div>;
+  if (total === 0) return <div style={{width: 100, height: 100, borderRadius: "50%", border: "6px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:11}}>No Data</div>;
 
   return (
-    <div style={{position: "relative", width: 140, height: 140, flexShrink: 0}}>
+    <div style={{position: "relative", width: 100, height: 100, flexShrink: 0}}>
       <svg viewBox="0 0 32 32" style={{transform: "rotate(-90deg)", borderRadius: "50%"}}>
         {data.map((slice) => {
           const pct = (slice.value / total) * 100;
@@ -224,8 +229,8 @@ function DonutChart({ data, colors }) {
         })}
       </svg>
       <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-        <div style={{fontSize: 22, fontWeight: 800, color:"#f0f6fc"}}>{total}</div>
-        <div style={{fontSize: 9, color:"#8b949e", textTransform:"uppercase", letterSpacing:"0.05em"}}>Items</div>
+        <div style={{fontSize: 18, fontWeight: 800, color:"#f0f6fc"}}>{total}</div>
+        <div style={{fontSize: 8, color:"#8b949e", textTransform:"uppercase", letterSpacing:"0.05em"}}>Items</div>
       </div>
     </div>
   );
@@ -244,21 +249,22 @@ function WaterCell({entries, period}){
   else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; // Emerald
 
   return(
-    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"#010409", border:`1px solid ${over?"rgba(249,115,22,.5)":"#30363d"}`}}>
+    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"#010409", border:`1px solid ${over?"rgba(249,115,22,.5)":"#30363d"}`, pointerEvents:"none"}}>
       <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${cl}%`,background:wc,transition:"height .5s cubic-bezier(.34,1.56,.64,1)"}}/>
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
-        <div style={{fontSize:10,fontWeight:700,color:tot>40?"#fff":"#8b949e"}}>
-          {tot===0?"—":`${tot}%`}
-        </div>
+        <div style={{fontSize:10,fontWeight:700,color:tot>40?"#fff":"#8b949e"}}>{tot===0?"—":`${tot}%`}</div>
       </div>
     </div>
   );
 }
 
 // ── MODALS ──
-function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}){
+function EditModal({person,fn,entries,defaultStart,onSave,onClose,onDelete,projects,getColor}){
   const [local,setLocal]=useState(entries.map(e=>({...e})));
-  const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:APR1,end:dStr(addDays(new Date(APR1),56))}]);
+  
+  // Use the specific date cell clicked, otherwise default to today
+  const initDate = defaultStart || dStr(new Date());
+  const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:initDate,end:dStr(addDays(new Date(initDate),28))}]);
   const rm=i=>setLocal(p=>p.filter((_,j)=>j!==i));
   const upd=(i,f,v)=>setLocal(p=>p.map((e,j)=>j===i?{...e,[f]:f==="pct"?Math.min(100,Math.max(0,Number(v)||0)):v}:e));
   const activeErr = local.some(l => local.filter(e => e.start <= l.start && e.end >= l.start).reduce((s,e)=>s+Number(e.pct),0) > 100);
@@ -297,7 +303,7 @@ function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}
             </div>
           ))}
         </div>
-        <button onClick={add} style={{width:"100%",background:"transparent",border:"1.5px dashed #30363d",borderRadius:8,padding:"8px",color:"#3b82f6",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment</button>
+        <button onClick={add} style={{width:"100%",background:"transparent",border:"1.5px dashed #30363d",borderRadius:8,padding:"8px",color:"#3b82f6",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment for {initDate}</button>
         {activeErr&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:6,padding:"9px 13px",fontSize:12,color:"#ff7b72",marginBottom:11}}>⚠ Simultaneous allocations exceed 100%.</div>}
         
         <div style={{display:"flex",gap:9,justifyContent:"space-between", alignItems:"center"}}>
@@ -439,6 +445,7 @@ export default function Dashboard(){
     }).filter(t => t.people.length > 0);
   }, [functions, filteredPeople]);
 
+  // WIDGET DATA: Project distribution
   const chartData = useMemo(() => {
     const projCounts = {};
     Object.values(allocations).flat().forEach(entry => {
@@ -447,7 +454,21 @@ export default function Dashboard(){
     return Object.entries(projCounts).map(([label, value]) => ({label, value})).sort((a,b)=>b.value-a.value);
   }, [allocations]);
 
-  const teamWorkload = useMemo(() => {
+  // WIDGET DATA: Team Workload (Average max allocation per function)
+  const teamWorkloadList = useMemo(() => {
+    return Object.entries(functions).map(([teamName, members]) => {
+      if (!members.length) return { name: teamName, load: 0 };
+      let totalLoad = 0;
+      members.forEach(pName => {
+        const entries = allocations[pName] || [];
+        totalLoad += Math.max(...periods.map(d => allocW(entries, d)), 0);
+      });
+      return { name: teamName, load: Math.round(totalLoad / members.length) };
+    }).sort((a,b) => b.load - a.load).filter(t => t.load > 0).slice(0, 6);
+  }, [functions, allocations, periods]);
+
+  // WIDGET DATA: Member Workload (Top 6 individuals)
+  const memberWorkloadList = useMemo(() => {
     return allPeople.map(p => {
       const entries = allocations[p.name] || [];
       const maxAlloc = Math.max(...periods.map(d => allocW(entries, d)), 0);
@@ -499,13 +520,14 @@ export default function Dashboard(){
       {/* --- LEFT SIDEBAR (PROJECTS) --- */}
       <div className="sidebar" style={{width: 260, display:"flex", flexDirection:"column", zIndex:10}}>
         
-        {/* LOGO AREA */}
+        {/* SMALLER LOGO & TRAIL */}
         <div style={{padding: "36px 20px 30px", borderBottom: "1px solid #30363d", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
-          <div style={{position:"relative", display:"flex", alignItems:"center", justifyContent:"center", width: 140, height: 140, marginBottom: 10}}>
+          <div className="logo-container">
+             <div className="logo-trail" />
              <div className="logo-ring ring-amber" />
              <div className="logo-ring ring-blue" />
              <div style={{textAlign:"center", zIndex:2}}>
-               <div style={{fontFamily:"'Inter', sans-serif", fontWeight:800, fontSize:22, color:"#fff", letterSpacing:1}}>STUDIO<span style={{color:"#8b949e", fontWeight:300}}>137</span></div>
+               <div style={{fontFamily:"'Inter', sans-serif", fontWeight:800, fontSize:15, color:"#fff", letterSpacing:1}}>STUDIO<span style={{color:"#8b949e", fontWeight:300}}>137</span></div>
              </div>
           </div>
           <div style={{fontSize:8, color:"#f97316", textTransform:"uppercase", letterSpacing:2, fontWeight:700, textAlign:"center"}}>Digital Media Solutions</div>
@@ -546,18 +568,18 @@ export default function Dashboard(){
         {/* Scrollable Content */}
         <div style={{padding: "24px 30px", overflowY:"auto", flex: 1}}>
           
-          {/* WIDGET ROW */}
-          <div style={{display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 20, marginBottom: 24}}>
+          {/* 3-COLUMN WIDGET ROW */}
+          <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20, marginBottom: 24}}>
             
-            {/* Status Overview */}
-            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column"}}>
+            {/* 1. Status Overview */}
+            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Status overview</div>
-              <div style={{display:"flex", alignItems:"center", gap: 30, flex: 1}}>
+              <div style={{display:"flex", alignItems:"center", gap: 20, flex: 1}}>
                 <DonutChart data={chartData} colors={pColors} />
-                <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap: "10px 20px", flex: 1, maxHeight: 150, overflowY:"auto"}} className="hide-scroll">
+                <div style={{display:"grid", gridTemplateColumns:"1fr", gap: "8px", flex: 1, maxHeight: 120, overflowY:"auto"}} className="hide-scroll">
                   {chartData.map(d => (
                     <div key={d.label} onClick={() => setFilterProj(filterProj === d.label ? null : d.label)} className="interactive-label" style={{
-                       display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:12, padding:"6px 10px", borderRadius:6,
+                       display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:11, padding:"6px 10px", borderRadius:6,
                        background: filterProj === d.label ? `${getColor(d.label)}22` : "transparent",
                        border: filterProj === d.label ? `1px solid ${getColor(d.label)}` : "1px solid transparent"
                      }}>
@@ -571,29 +593,53 @@ export default function Dashboard(){
                 </div>
               </div>
             </div>
-            
-            {/* Team Workload */}
-            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column"}}>
+
+            {/* 2. Team Workload */}
+            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
                <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Team workload</div>
                <div style={{display:"flex", flexDirection:"column", gap: 14, flex:1, overflowY:"auto"}} className="hide-scroll">
-                  {teamWorkload.map(tw => (
+                  {teamWorkloadList.map(tw => (
                      <div key={tw.name} style={{display:"flex", alignItems:"center", gap: 14}}>
-                        <div style={{width: 26, height: 26, borderRadius:"50%", background:"#21262d", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
-                           {tw.name.split(" ").map(w=>w[0]).slice(0,2).join("")}
+                        <div style={{width: 26, height: 26, borderRadius:"4px", background:"#21262d", color:"#3b82f6", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
+                           {tw.name.substring(0,2).toUpperCase()}
                         </div>
                         <div style={{flex: 1}}>
-                           <div style={{display:"flex", justifyContent:"space-between", fontSize:12, marginBottom:5}}>
+                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:5}}>
                               <span style={{color:"#c9d1d9"}}>{tw.name}</span>
                               <span style={{color: tw.load>100 ? "#ff7b72" : "#8b949e", fontWeight:600}}>{tw.load}%</span>
                            </div>
                            <div style={{height: 6, background:"#010409", borderRadius:3, overflow:"hidden", border:"1px solid #30363d"}}>
-                              <div style={{height:"100%", width:`${Math.min(tw.load, 100)}%`, background: tw.load > 100 ? "#e11d48" : tw.load >= 75 ? "#3b82f6" : "#10b981", borderRadius:3}} />
+                              <div style={{height:"100%", width:`${Math.min(tw.load, 100)}%`, background: tw.load > 100 ? "#e11d48" : tw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:3}} />
                            </div>
                         </div>
                      </div>
                   ))}
                </div>
             </div>
+            
+            {/* 3. Member Workload */}
+            <div className="card" style={{padding: 24, display:"flex", flexDirection:"column", height: 210}}>
+               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Member workload</div>
+               <div style={{display:"flex", flexDirection:"column", gap: 14, flex:1, overflowY:"auto"}} className="hide-scroll">
+                  {memberWorkloadList.map(mw => (
+                     <div key={mw.name} style={{display:"flex", alignItems:"center", gap: 14}}>
+                        <div style={{width: 26, height: 26, borderRadius:"50%", background:"#21262d", color:"#f97316", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, flexShrink:0}}>
+                           {mw.name.split(" ").map(w=>w[0]).slice(0,2).join("")}
+                        </div>
+                        <div style={{flex: 1}}>
+                           <div style={{display:"flex", justifyContent:"space-between", fontSize:11, marginBottom:5}}>
+                              <span style={{color:"#c9d1d9"}}>{mw.name}</span>
+                              <span style={{color: mw.load>100 ? "#ff7b72" : "#8b949e", fontWeight:600}}>{mw.load}%</span>
+                           </div>
+                           <div style={{height: 6, background:"#010409", borderRadius:3, overflow:"hidden", border:"1px solid #30363d"}}>
+                              <div style={{height:"100%", width:`${Math.min(mw.load, 100)}%`, background: mw.load > 100 ? "#e11d48" : mw.load >= 75 ? "#f97316" : "#3b82f6", borderRadius:3}} />
+                           </div>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            </div>
+
           </div>
 
           {/* TIMELINE CONTROLS */}
@@ -635,8 +681,9 @@ export default function Dashboard(){
                   {people.map(name => {
                     const entries = allocations[name]||[];
                     return (
-                      <div key={name} className="rh" onClick={()=>setEditing({name,fn})} style={{display:"flex", alignItems:"center"}}>
-                        <div style={{width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0}}>
+                      <div key={name} className="rh" style={{display:"flex", alignItems:"center"}}>
+                        
+                        <div onClick={()=>setEditing({name,fn})} style={{width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0, cursor:"pointer"}}>
                           <div style={{width:28, height:28, borderRadius:"50%", background:"#21262d", border:"1px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
                             {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
                           </div>
@@ -645,11 +692,12 @@ export default function Dashboard(){
                         
                         <div style={{display:"flex", overflowX:"auto", flex: 1, padding:"8px 0"}} className="hide-scroll">
                           {periods.map((d, i) => (
-                            <div key={i} style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
+                            <div key={i} onClick={()=>setEditing({name, fn, defaultStart: dStr(d.start)})} className="date-cell" style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
                               <WaterCell entries={entries} period={d} />
                             </div>
                           ))}
                         </div>
+                        
                       </div>
                     );
                   })}
@@ -661,7 +709,7 @@ export default function Dashboard(){
         </div>
       </div>
 
-      {editing&&<EditModal person={editing.name} fn={editing.fn} entries={allocations[editing.name]||[]} onDelete={(p, f) => deleteMember(p, f)} onSave={e=>saveAlloc(editing.name,e)} onClose={()=>setEditing(null)} projects={projects} getColor={getColor}/>}
+      {editing&&<EditModal person={editing.name} fn={editing.fn} defaultStart={editing.defaultStart} entries={allocations[editing.name]||[]} onDelete={(p, f) => deleteMember(p, f)} onSave={e=>saveAlloc(editing.name,e)} onClose={()=>setEditing(null)} projects={projects} getColor={getColor}/>}
       {addingProj&&<AddProjectModal onAdd={addProject} onClose={()=>setAddingProj(false)} existing={projects}/>}
       {addingMember && <AddMemberModal onAdd={addMember} onClose={()=>setAddingMember(false)} teams={Object.keys(functions)} />}
     </div>
