@@ -3,44 +3,57 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from './firebaseClient'; 
 
 const STYLE = `
-  @import url('https://fonts.googleapis.com/css2?family=IM+Fell+English&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
+  
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body {
-    background: linear-gradient(135deg, #dde8ff 0%, #eedeff 45%, #d9f0ff 100%);
-    min-height: 100vh;
-    font-family: 'Century Schoolbook', 'Century Old Style Std', 'Bookman Old Style', Georgia, serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
   }
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 2px; }
-  input[type=date]::-webkit-calendar-picker-indicator { cursor:pointer; opacity:0.4; }
-  select option { background:#fff; color:#1e293b; }
-  .glass {
-    background: rgba(255,255,255,0.52);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    border: 1px solid rgba(255,255,255,0.78);
-    box-shadow: 0 8px 32px rgba(99,102,241,0.07), inset 0 1px 0 rgba(255,255,255,0.95);
-  }
-  .glassd {
-    background: rgba(255,255,255,0.32);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border: 1px solid rgba(255,255,255,0.62);
-  }
-  .ginput {
-    background: rgba(255,255,255,0.65);
-    border: 1px solid rgba(99,102,241,0.18);
+  
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #010409; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+  
+  input[type=date]::-webkit-calendar-picker-indicator { filter: invert(1); cursor:pointer; opacity:0.6; }
+  select option { background:#161b22; color:#c9d1d9; }
+  
+  /* Studio 137 Dark Cards */
+  .card {
+    background: #161b22;
+    border: 1px solid #30363d;
     border-radius: 10px;
-    color: #1e293b;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  }
+  
+  /* Glowing Accents */
+  .glow-border { position: relative; }
+  .glow-border::before {
+    content: ''; position: absolute; top: -1px; left: -1px; right: -1px; bottom: -1px;
+    background: linear-gradient(45deg, #f97316, #3b82f6);
+    z-index: -1; border-radius: 11px; opacity: 0.3;
+  }
+
+  .ginput {
+    background: #010409;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
     font-family: inherit;
     outline: none;
-    transition: border-color .2s, box-shadow .2s;
+    transition: border-color .2s;
   }
-  .ginput:focus { border-color: rgba(99,102,241,.45); box-shadow: 0 0 0 3px rgba(99,102,241,.09); }
-  .rh { transition: background .14s; }
-  .rh:hover { background: rgba(255,255,255,.62) !important; }
-  .rh-proj { transition: background .14s; border-radius: 6px; cursor: pointer; }
-  .rh-proj:hover { background: rgba(255,255,255,.62) !important; }
+  .ginput:focus { border-color: #f97316; }
+  
+  .rh { transition: background .14s; border-bottom: 1px solid #21262d; cursor: pointer; }
+  .rh:hover { background: #21262d !important; }
+  
+  .brand-serif { font-family: 'Playfair Display', serif; }
+  
   @keyframes su { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fi { from{opacity:0} to{opacity:1} }
 `;
@@ -59,46 +72,40 @@ const INITIAL_FUNCTIONS = {
 
 const DEFAULT_PROJECTS = ["MTF","TL","DR","APEST","NSA","BCW","SC","SLINGSHOT","FREQUENCY","HIMALAYAN HAAT","DELIVA","GLASS"];
 const DEFAULT_COLORS = {
-  "MTF":"#6366f1","TL":"#f59e0b","DR":"#10b981","APEST":"#ef4444",
-  "NSA":"#3b82f6","BCW":"#8b5cf6","SC":"#ec4899","SLINGSHOT":"#14b8a6",
-  "FREQUENCY":"#f97316","HIMALAYAN HAAT":"#84cc16","DELIVA":"#06b6d4","GLASS":"#a855f7",
+  "MTF":"#3b82f6","TL":"#f97316","DR":"#10b981","APEST":"#ef4444",
+  "NSA":"#8b5cf6","BCW":"#d946ef","SC":"#ec4899","SLINGSHOT":"#14b8a6",
+  "FREQUENCY":"#f59e0b","HIMALAYAN HAAT":"#84cc16","DELIVA":"#06b6d4","GLASS":"#a855f7",
 };
 const CPOOL = ["#e11d48","#0891b2","#15803d","#b45309","#7c3aed","#be185d","#0369a1","#047857","#92400e","#065f46"];
 
 const APR1 = "2026-04-01";
 function dStr(d){return d instanceof Date?d.toISOString().slice(0,10):d;}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}
-function addW(d,n){return addDays(d,n*7);}
 function getMon(d){const x=new Date(d);x.setHours(0,0,0,0);const dy=x.getDay();x.setDate(x.getDate()+(dy===0?-6:1-dy));return x;}
 
-// Period Generators
-function get4W(anchor){
-  const m=getMon(anchor);
-  return Array.from({length:4},(_,i)=>{
-    const s=addDays(m,i*7);
-    return {start:s, end:addDays(s,6), isMonth:false};
+// --- NEW DAY-BY-DAY TIMELINE LOGIC ---
+function getDaysForWeekly(anchor) {
+  const m = getMon(anchor);
+  return Array.from({length: 7}, (_, i) => {
+    const d = addDays(m, i);
+    return { start: d, end: d, label: d.toLocaleDateString("en-GB",{weekday:"short", day:"numeric"}) };
   });
 }
-function get4M(anchor){
-  const m=new Date(anchor);
-  m.setDate(1);
-  return Array.from({length:4},(_,i)=>{
-    const s=new Date(m.getFullYear(), m.getMonth() + i, 1);
-    const e=new Date(m.getFullYear(), m.getMonth() + i + 1, 0);
-    return {start:s, end:e, isMonth:true};
+function getDaysForMonthly(anchor) {
+  const y = anchor.getFullYear();
+  const m = anchor.getMonth();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  return Array.from({length: lastDay}, (_, i) => {
+    const d = new Date(y, m, i + 1);
+    return { start: d, end: d, label: d.toLocaleDateString("en-GB",{day:"numeric", month:"short"}) };
   });
 }
 
 function active(e, period){return new Date(e.start) <= period.end && new Date(e.end) >= period.start;}
 function allocW(entries, period){return (entries||[]).filter(e=>active(e,period)).reduce((s,e)=>s+Number(e.pct),0);}
-function pLabel(p){
-  return p.isMonth 
-    ? p.start.toLocaleDateString("en-GB",{month:"short", year:"numeric"}) 
-    : p.start.toLocaleDateString("en-GB",{day:"numeric",month:"short"});
-}
 
 function buildSeed(){
-  const e=n=>dStr(addW(new Date(APR1),n));
+  const e=n=>dStr(addDays(new Date(APR1),n*7));
   return {
     "Jahangir":        [{project:"MTF",pct:50,start:APR1,end:e(8)},{project:"NSA",pct:25,start:APR1,end:e(4)},{project:"BCW",pct:25,start:APR1,end:e(10)}],
     "Nabeel":          [{project:"APEST",pct:75,start:APR1,end:e(6)},{project:"TL",pct:25,start:APR1,end:e(4)}],
@@ -135,119 +142,101 @@ function buildSeed(){
   };
 }
 
-// ── Water cell ──
-function WaterCell({entries, period, getColor}){
+// ── Jira-Style Donut Chart Component ──
+function DonutChart({ data, colors }) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  let cumulativePercent = 0;
+  
+  if (total === 0) {
+    return <div style={{width: 140, height: 140, borderRadius: "50%", border: "8px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", color:"#8b949e", fontSize:12}}>No Data</div>;
+  }
+
+  return (
+    <div style={{position: "relative", width: 140, height: 140}}>
+      <svg viewBox="0 0 32 32" style={{transform: "rotate(-90deg)", borderRadius: "50%"}}>
+        {data.map((slice) => {
+          const pct = (slice.value / total) * 100;
+          const strokeDasharray = `${pct} 100`;
+          const strokeDashoffset = -cumulativePercent;
+          cumulativePercent += pct;
+          return (
+            <circle key={slice.label} r="16" cx="16" cy="16" fill="none"
+              stroke={colors[slice.label] || "#3b82f6"} strokeWidth="6"
+              strokeDasharray={strokeDasharray} strokeDashoffset={strokeDashoffset}
+              style={{transition: "stroke-dasharray 0.5s ease"}}
+            />
+          );
+        })}
+      </svg>
+      <div style={{position:"absolute", inset:0, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
+        <div style={{fontSize: 20, fontWeight: 700, color:"#f0f6fc"}}>{total}</div>
+        <div style={{fontSize: 9, color:"#8b949e", textTransform:"uppercase"}}>Allocations</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Water cell (Adapted for Daily View) ──
+function WaterCell({entries, period}){
   const act=entries.filter(e=>active(e, period));
   const tot=act.reduce((s,e)=>s+Number(e.pct),0);
   const over=tot > 100; 
   const cl=Math.min(tot,100);
 
   let wc = "transparent";
-  if (tot >= 100) wc = "rgba(239, 68, 68, 0.8)"; 
-  else if (tot >= 75) wc = "rgba(234, 88, 12, 0.8)"; 
-  else if (tot >= 50) wc = "rgba(245, 158, 11, 0.7)"; 
-  else if (tot > 0) wc = "rgba(34, 197, 94, 0.7)"; 
+  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; // Studio137 Amber
+  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; // Studio137 Blue
+  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; 
 
   return(
-    <div style={{width:80,height:54,borderRadius:10,overflow:"hidden",position:"relative",background:"rgba(255,255,255,.45)",border:`1px solid ${over?"rgba(239,68,68,.35)":"rgba(255,255,255,.75)"}`,boxShadow:"0 2px 8px rgba(99,102,241,.05)"}}>
-      <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${cl}%`,background:wc,transition:"height .5s cubic-bezier(.34,1.56,.64,1)",borderRadius:"0 0 9px 9px"}}>
-        {tot>0&&<div style={{position:"absolute",top:0,left:0,right:0,height:2,background:"rgba(255,255,255,.35)",borderRadius:1}}/>}
-      </div>
+    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"#010409", border:`1px solid ${over?"rgba(249,115,22,.5)":"#30363d"}`}}>
+      <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${cl}%`,background:wc,transition:"height .5s cubic-bezier(.34,1.56,.64,1)"}}/>
       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
-        <div style={{fontSize:12,fontWeight:700,color:tot>40?"#fff":"#1e293b",textShadow:tot>40?"0 1px 3px rgba(0,0,0,.15)":"none"}}>
+        <div style={{fontSize:10,fontWeight:700,color:tot>40?"#fff":"#8b949e"}}>
           {tot===0?"—":`${tot}%`}
         </div>
-        {act.length>0&&(
-          <div style={{display:"flex",gap:3}}>
-            {act.slice(0,4).map((e,i)=><div key={i} style={{width:4,height:4,borderRadius:"50%",background:getColor(e.project),opacity:tot>40?.85:.65}}/>)}
-          </div>
-        )}
       </div>
     </div>
   );
 }
 
-// ── Dial ──
-function Dial({offset, setOffset, label}){
-  const ref=useRef(null); const sx=useRef(null); const so=useRef(null);
-  function pd(e){sx.current=e.clientX;so.current=offset;ref.current?.setPointerCapture(e.pointerId);}
-  function pm(e){if(sx.current===null)return;const dx=e.clientX-sx.current;const d=Math.round(-dx/44);const n=so.current+d;if(n!==offset)setOffset(n);}
-  function pu(){sx.current=null;}
-  
-  return(
-    <div style={{display:"flex", flexDirection:"column", alignItems:"center", padding:"14px 20px 8px"}}>
-      <div style={{display:"flex", alignItems:"center", gap:16}}>
-        <button onClick={()=>setOffset(w=>w-4)} style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.55)",border:"1px solid rgba(255,255,255,.8)",cursor:"pointer",color:"#6366f1",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(99,102,241,.1)"}}>‹</button>
-        
-        <div ref={ref} onPointerDown={pd} onPointerMove={pm} onPointerUp={pu}
-          style={{width:260,height:44,borderRadius:22,overflow:"hidden",position:"relative",background:"rgba(255,255,255,.35)",border:"1px solid rgba(255,255,255,.8)",boxShadow:"inset 0 2px 8px rgba(99,102,241,.07)",cursor:"grab",userSelect:"none",touchAction:"none"}}>
-          <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:20}}>
-            {[-2,-1,0,1,2].map(i=><div key={i} style={{width:1.5,height:i===0?24:i===Math.abs(i)?14:10,borderRadius:1,background:i===0?"rgba(99,102,241,.7)":"rgba(99,102,241,.18)"}}/>)}
-          </div>
-          <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
-            <div style={{fontSize:13,fontWeight:700,color:"#4338ca"}}>{label}</div>
-          </div>
-        </div>
-
-        <button onClick={()=>setOffset(w=>w+4)} style={{width:32,height:32,borderRadius:"50%",background:"rgba(255,255,255,.55)",border:"1px solid rgba(255,255,255,.8)",cursor:"pointer",color:"#6366f1",fontSize:18,fontWeight:800,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"0 2px 6px rgba(99,102,241,.1)"}}>›</button>
-      </div>
-      
-      <div style={{height: 18, marginTop: 4}}>
-        {offset !== 0 && (
-          <button onClick={() => setOffset(0)} style={{background:"transparent", border:"none", fontSize:10, color:"#6366f1", cursor:"pointer", fontWeight:600, textDecoration:"underline"}}>
-            ← Back to today
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Edit modal ──
+// ── DARK MODALS ──
 function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}){
   const [local,setLocal]=useState(entries.map(e=>({...e})));
-  const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:APR1,end:dStr(addW(new Date(APR1),8))}]);
+  const add=()=>setLocal(p=>[...p,{project:projects[0],pct:50,start:APR1,end:dStr(addDays(new Date(APR1),56))}]);
   const rm=i=>setLocal(p=>p.filter((_,j)=>j!==i));
   const upd=(i,f,v)=>setLocal(p=>p.map((e,j)=>j===i?{...e,[f]:f==="pct"?Math.min(100,Math.max(0,Number(v)||0)):v}:e));
-  const periods=get4W(new Date()); const wt=periods.map(w=>allocW(local,w)); const mx=Math.max(...wt,0); const err=mx>100;
   
+  // Checking active max load against a generic generic period logic to flag > 100%
+  const activeErr = local.some(l => local.filter(e => e.start <= l.start && e.end >= l.start).reduce((s,e)=>s+Number(e.pct),0) > 100);
+
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(99,102,241,.07)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="glass" style={{borderRadius:20,padding:26,width:490,maxHeight:"88vh",overflowY:"auto",animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:490,maxHeight:"88vh",overflowY:"auto",animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18}}>
           <div>
-            <div style={{fontSize:17,fontWeight:700,color:"#1e293b"}}>{person}</div>
-            <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>{fn}</div>
+            <div style={{fontSize:17,fontWeight:700,color:"#f0f6fc"}}>{person}</div>
+            <div style={{fontSize:11,color:"#8b949e",marginTop:2}}>{fn}</div>
           </div>
-          <button onClick={onClose} style={{background:"rgba(255,255,255,.6)",border:"1px solid rgba(255,255,255,.8)",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#64748b",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:"50%",width:28,height:28,cursor:"pointer",color:"#8b949e",fontSize:15,display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,background:"rgba(99,102,241,.04)",borderRadius:12,padding:10,marginBottom:18,border:"1px solid rgba(99,102,241,.07)"}}>
-          {periods.map((w,i)=>(
-            <div key={i} style={{textAlign:"center"}}>
-              <div style={{fontSize:9,color:"#94a3b8",marginBottom:4,textTransform:"uppercase",letterSpacing:".05em"}}>{pLabel(w)}</div>
-              <div style={{height:32,borderRadius:7,overflow:"hidden",position:"relative",background:"rgba(255,255,255,.5)",border:"1px solid rgba(255,255,255,.8)"}}>
-                <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${Math.min(wt[i],100)}%`,background:wt[i]>100?"rgba(239,68,68,.5)":wt[i]>=80?"rgba(99,102,241,.5)":"rgba(99,102,241,.22)",transition:"height .3s"}}/>
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:wt[i]>58?"#fff":"#1e293b"}}>{wt[i]||"—"}{wt[i]>0?"%":""}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        
         <div style={{display:"flex",flexDirection:"column",gap:9,marginBottom:12}}>
           {local.map((entry,i)=>(
-            <div key={i} className="glassd" style={{borderRadius:12,padding:13}}>
+            <div key={i} style={{background:"#010409", border:"1px solid #30363d", borderRadius:8,padding:13}}>
               <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:9}}>
                 <div style={{width:8,height:8,borderRadius:"50%",background:getColor(entry.project),flexShrink:0}}/>
                 <select value={entry.project} onChange={e=>upd(i,"project",e.target.value)} className="ginput" style={{flex:1,padding:"6px 9px",fontSize:13}}>
                   {projects.map(p=><option key={p} value={p}>{p}</option>)}
                 </select>
                 <input type="number" min="0" max="100" step="5" value={entry.pct} onChange={e=>upd(i,"pct",e.target.value)} className="ginput" style={{width:60,padding:"6px 8px",fontSize:13,textAlign:"right"}}/>
-                <span style={{fontSize:11,color:"#94a3b8"}}>%</span>
-                <button onClick={()=>rm(i)} style={{background:"rgba(239,68,68,.08)",border:"1px solid rgba(239,68,68,.15)",borderRadius:7,color:"#ef4444",cursor:"pointer",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>×</button>
+                <span style={{fontSize:11,color:"#8b949e"}}>%</span>
+                <button onClick={()=>rm(i)} style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:7,color:"#ef4444",cursor:"pointer",width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>×</button>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:7}}>
                 {["start","end"].map(f=>(
                   <div key={f}>
-                    <div style={{fontSize:9,color:"#94a3b8",marginBottom:3,textTransform:"uppercase",letterSpacing:".06em"}}>{f} date</div>
+                    <div style={{fontSize:9,color:"#8b949e",marginBottom:3,textTransform:"uppercase",letterSpacing:".06em"}}>{f} date</div>
                     <input type="date" value={entry[f]} onChange={e=>upd(i,f,e.target.value)} className="ginput" style={{width:"100%",padding:"6px 8px",fontSize:12}}/>
                   </div>
                 ))}
@@ -255,15 +244,15 @@ function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}
             </div>
           ))}
         </div>
-        <button onClick={add} className="glassd" style={{width:"100%",border:"1.5px dashed rgba(99,102,241,.28)",borderRadius:11,padding:"8px",color:"#6366f1",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment</button>
-        {err&&<div style={{background:"rgba(239,68,68,.06)",border:"1px solid rgba(239,68,68,.18)",borderRadius:9,padding:"9px 13px",fontSize:12,color:"#dc2626",marginBottom:11}}>⚠ Exceeds 100%. Please adjust.</div>}
+        <button onClick={add} style={{width:"100%",background:"transparent",border:"1.5px dashed #30363d",borderRadius:8,padding:"8px",color:"#3b82f6",cursor:"pointer",fontSize:13,marginBottom:12,fontFamily:"inherit"}}>+ Add assignment</button>
+        {activeErr&&<div style={{background:"rgba(239,68,68,.1)",border:"1px solid rgba(239,68,68,.3)",borderRadius:6,padding:"9px 13px",fontSize:12,color:"#ff7b72",marginBottom:11}}>⚠ Simultaneous allocations exceed 100%.</div>}
         
         <div style={{display:"flex",gap:9,justifyContent:"space-between", alignItems:"center"}}>
-          <button onClick={()=>{ if(window.confirm(`Are you sure you want to delete ${person} from the team?`)) onDelete(person, fn); }} className="glassd" style={{background:"rgba(239,68,68,.05)", border:"1px solid rgba(239,68,68,.2)", borderRadius:9,padding:"8px 16px",color:"#ef4444",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Delete Person</button>
+          <button onClick={()=>{ if(window.confirm(`Are you sure you want to delete ${person} from the team?`)) onDelete(person, fn); }} style={{background:"rgba(239,68,68,.1)", border:"1px solid rgba(239,68,68,.3)", borderRadius:6,padding:"8px 16px",color:"#ff7b72",cursor:"pointer",fontSize:12,fontFamily:"inherit"}}>Delete Person</button>
           
           <div style={{display:"flex",gap:9}}>
-            <button onClick={onClose} className="glassd" style={{borderRadius:9,padding:"8px 16px",color:"#64748b",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Cancel</button>
-            <button onClick={()=>{if(!err)onSave(local);}} disabled={err} style={{background:err?"rgba(99,102,241,.1)":"rgba(99,102,241,.85)",backdropFilter:"blur(8px)",border:"1px solid rgba(99,102,241,.3)",borderRadius:9,padding:"8px 20px",color:err?"#a5b4fc":"#fff",cursor:err?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Save</button>
+            <button onClick={onClose} style={{background:"transparent", border:"1px solid #30363d", borderRadius:6,padding:"8px 16px",color:"#8b949e",cursor:"pointer",fontSize:13,fontFamily:"inherit"}}>Cancel</button>
+            <button onClick={()=>{if(!activeErr)onSave(local);}} disabled={activeErr} style={{background:activeErr?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 20px",color:activeErr?"#8b949e":"#fff",cursor:activeErr?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Save</button>
           </div>
         </div>
       </div>
@@ -271,114 +260,53 @@ function EditModal({person,fn,entries,onSave,onClose,onDelete,projects,getColor}
   );
 }
 
-// ── Add project modal ──
 function AddProjectModal({onAdd,onClose,existing}){
   const [name,setName]=useState(""); const [color,setColor]=useState(CPOOL[0]);
   const t=name.trim().toUpperCase(); const ex=existing.includes(t);
   const allColors=[...Object.values(DEFAULT_COLORS).slice(0,8),...CPOOL.slice(0,6)];
   return(
-    <div style={{position:"fixed",inset:0,background:"rgba(99,102,241,.07)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="glass" style={{borderRadius:20,padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:16,fontWeight:700,color:"#1e293b",marginBottom:4}}>New Project</div>
-        <div style={{fontSize:12,color:"#94a3b8",marginBottom:18}}>Short code, e.g. ORBIT, NOVA, PULSE</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontSize:16,fontWeight:700,color:"#f0f6fc",marginBottom:4}}>New Project</div>
+        <div style={{fontSize:12,color:"#8b949e",marginBottom:18}}>Short code, e.g. ORBIT, NOVA, PULSE</div>
         <input value={name} onChange={e=>setName(e.target.value.toUpperCase())} placeholder="PROJECT CODE" className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:14,marginBottom:7,letterSpacing:".06em"}}/>
-        {ex&&<div style={{fontSize:11,color:"#ef4444",marginBottom:8}}>Already exists.</div>}
-        <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase",letterSpacing:".05em"}}>Colour</div>
+        {ex&&<div style={{fontSize:11,color:"#ff7b72",marginBottom:8}}>Already exists.</div>}
+        <div style={{fontSize:9,color:"#8b949e",marginBottom:7,textTransform:"uppercase",letterSpacing:".05em"}}>Colour</div>
         <div style={{display:"flex",gap:7,marginBottom:20,flexWrap:"wrap"}}>
-          {allColors.map(c=><div key={c} onClick={()=>setColor(c)} style={{width:22,height:22,borderRadius:"50%",background:c,cursor:"pointer",border:`2px solid ${color===c?"#1e293b":"transparent"}`,boxShadow:color===c?"0 0 0 2px rgba(255,255,255,.8)":"none",transform:color===c?"scale(1.18)":"scale(1)",transition:"transform .12s"}}/>)}
+          {allColors.map(c=><div key={c} onClick={()=>setColor(c)} style={{width:22,height:22,borderRadius:"50%",background:c,cursor:"pointer",border:`2px solid ${color===c?"#c9d1d9":"transparent"}`,boxShadow:color===c?"0 0 0 2px rgba(0,0,0,1)":"none",transform:color===c?"scale(1.18)":"scale(1)",transition:"transform .12s"}}/>)}
         </div>
         <div style={{display:"flex",gap:9,justifyContent:"flex-end"}}>
-          <button onClick={onClose} className="glassd" style={{borderRadius:9,padding:"8px 15px",color:"#64748b",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={()=>{if(t&&!ex){onAdd(t,color);onClose();}}} disabled={!t||ex} style={{background:!t||ex?"rgba(99,102,241,.1)":"rgba(99,102,241,.85)",border:"1px solid rgba(99,102,241,.3)",borderRadius:9,padding:"8px 18px",color:!t||ex?"#a5b4fc":"#fff",cursor:!t||ex?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={()=>{if(t&&!ex){onAdd(t,color);onClose();}}} disabled={!t||ex} style={{background:!t||ex?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!t||ex?"#8b949e":"#fff",cursor:!t||ex?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Add Member Modal ──
 function AddMemberModal({onAdd, onClose, teams}){
   const [name, setName] = useState("");
   const [team, setTeam] = useState(teams[0]);
   return (
-    <div style={{position:"fixed",inset:0,background:"rgba(99,102,241,.07)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="glass" style={{borderRadius:20,padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:16,fontWeight:700,color:"#1e293b",marginBottom:18}}>Add New Member</div>
-        <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>Full Name</div>
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.7)",backdropFilter:"blur(8px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
+      <div className="card" style={{padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
+        <div style={{fontSize:16,fontWeight:700,color:"#f0f6fc",marginBottom:18}}>Add New Member</div>
+        <div style={{fontSize:9,color:"#8b949e",marginBottom:7,textTransform:"uppercase"}}>Full Name</div>
         <input value={name} onChange={e=>setName(e.target.value)} placeholder="Jane Doe" className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:14,marginBottom:15}}/>
-        <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>Assign to Team</div>
+        <div style={{fontSize:9,color:"#8b949e",marginBottom:7,textTransform:"uppercase"}}>Assign to Team</div>
         <select value={team} onChange={e=>setTeam(e.target.value)} className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:14,marginBottom:20}}>
           {teams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <div style={{display:"flex",gap:9,justifyContent:"flex-end"}}>
-          <button onClick={onClose} className="glassd" style={{borderRadius:9,padding:"8px 15px",color:"#64748b",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={()=>{if(name.trim()){onAdd(name.trim(), team); onClose();}}} disabled={!name.trim()} style={{background:"rgba(99,102,241,.85)",border:"1px solid rgba(99,102,241,.3)",borderRadius:9,padding:"8px 18px",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600}}>Add Member</button>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid #30363d",borderRadius:6,padding:"8px 15px",color:"#8b949e",cursor:"pointer",fontSize:13}}>Cancel</button>
+          <button onClick={()=>{if(name.trim()){onAdd(name.trim(), team); onClose();}}} disabled={!name.trim()} style={{background:!name.trim()?"#30363d":"#3b82f6",border:"none",borderRadius:6,padding:"8px 18px",color:!name.trim()?"#8b949e":"#fff",cursor:!name.trim()?"not-allowed":"pointer",fontSize:13,fontWeight:600}}>Add Member</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ── Add Resource to Project Modal ──
-function AddResourceToProjectModal({project, onClose, onSave, allPeople, allocations}){
-  const avail = allPeople.filter(p => !(allocations[p.name]||[]).some(e => e.project === project));
-  
-  const [person, setPerson] = useState(avail.length ? avail[0].name : "");
-  const [pct, setPct] = useState(50);
-  const [start, setStart] = useState(APR1);
-  const [end, setEnd] = useState(dStr(addW(new Date(APR1), 8)));
-
-  if(avail.length === 0){
-    return (
-      <div style={{position:"fixed",inset:0,background:"rgba(99,102,241,.07)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000}} onClick={onClose}>
-        <div className="glass" style={{borderRadius:20,padding:26,width:340}} onClick={e=>e.stopPropagation()}>
-          <div style={{fontSize:16,fontWeight:700,color:"#1e293b",marginBottom:10}}>All Assigned</div>
-          <div style={{fontSize:13,color:"#64748b",marginBottom:20}}>Every team member is already assigned to {project}. To edit their allocation, click their name in the project list.</div>
-          <button onClick={onClose} className="glassd" style={{width:"100%",borderRadius:9,padding:"8px",color:"#1e293b",cursor:"pointer",fontSize:13,fontWeight:600}}>Close</button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div style={{position:"fixed",inset:0,background:"rgba(99,102,241,.07)",backdropFilter:"blur(14px)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000,animation:"fi .2s ease"}} onClick={onClose}>
-      <div className="glass" style={{borderRadius:20,padding:26,width:340,animation:"su .22s ease"}} onClick={e=>e.stopPropagation()}>
-        <div style={{fontSize:16,fontWeight:700,color:"#1e293b",marginBottom:4}}>Add Resource</div>
-        <div style={{fontSize:12,color:"#6366f1",marginBottom:18,fontWeight:600}}>Project: {project}</div>
-        
-        <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>Select Member</div>
-        <select value={person} onChange={e=>setPerson(e.target.value)} className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:13,marginBottom:15}}>
-          {avail.map(p => <option key={p.name} value={p.name}>{p.name} ({p.fn})</option>)}
-        </select>
-
-        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:15}}>
-          <div style={{flex:1}}>
-            <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>Allocation %</div>
-            <input type="number" min="0" max="100" step="5" value={pct} onChange={e=>setPct(e.target.value)} className="ginput" style={{width:"100%",padding:"10px 13px",fontSize:13}}/>
-          </div>
-        </div>
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:20}}>
-          <div>
-            <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>Start</div>
-            <input type="date" value={start} onChange={e=>setStart(e.target.value)} className="ginput" style={{width:"100%",padding:"10px 8px",fontSize:12}}/>
-          </div>
-          <div>
-            <div style={{fontSize:9,color:"#94a3b8",marginBottom:7,textTransform:"uppercase"}}>End</div>
-            <input type="date" value={end} onChange={e=>setEnd(e.target.value)} className="ginput" style={{width:"100%",padding:"10px 8px",fontSize:12}}/>
-          </div>
-        </div>
-
-        <div style={{display:"flex",gap:9,justifyContent:"flex-end"}}>
-          <button onClick={onClose} className="glassd" style={{borderRadius:9,padding:"8px 15px",color:"#64748b",cursor:"pointer",fontSize:13}}>Cancel</button>
-          <button onClick={()=>{onSave(person, {project, pct:Number(pct)||0, start, end}); onClose();}} style={{background:"rgba(99,102,241,.85)",border:"1px solid rgba(99,102,241,.3)",borderRadius:9,padding:"8px 18px",color:"#fff",cursor:"pointer",fontSize:13,fontWeight:600}}>Add to Project</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── MAIN ──
+// ── MAIN DASHBOARD ──
 export default function Dashboard(){
   const [projects, setProjects] = useState([]);
   const [allocations, setAllocations] = useState({});
@@ -395,394 +323,255 @@ export default function Dashboard(){
         
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const loadedProjects = data.projects?.length > 0 ? data.projects : DEFAULT_PROJECTS;
-          const loadedAllocations = Object.keys(data.allocations || {}).length > 0 ? data.allocations : buildSeed();
-          const loadedColors = Object.keys(data.p_colors || {}).length > 0 ? data.p_colors : DEFAULT_COLORS;
-          const loadedFunctions = Object.keys(data.functions || {}).length > 0 ? data.functions : INITIAL_FUNCTIONS;
-
-          setProjects(loadedProjects);
-          setAllocations(loadedAllocations);
-          setPColors(loadedColors);
-          setFunctions(loadedFunctions);
-          
-          if (!data.projects?.length) {
-              await setDoc(docRef, { projects: loadedProjects, allocations: loadedAllocations, p_colors: loadedColors, functions: loadedFunctions });
-          }
+          setProjects(data.projects?.length > 0 ? data.projects : DEFAULT_PROJECTS);
+          setAllocations(Object.keys(data.allocations || {}).length > 0 ? data.allocations : buildSeed());
+          setPColors(Object.keys(data.p_colors || {}).length > 0 ? data.p_colors : DEFAULT_COLORS);
+          setFunctions(Object.keys(data.functions || {}).length > 0 ? data.functions : INITIAL_FUNCTIONS);
         } else {
-          // If document doesn't exist at all yet, initialize it
           const initialData = { projects: DEFAULT_PROJECTS, allocations: buildSeed(), p_colors: DEFAULT_COLORS, functions: INITIAL_FUNCTIONS };
           await setDoc(docRef, initialData);
-          setProjects(initialData.projects);
-          setAllocations(initialData.allocations);
-          setPColors(initialData.p_colors);
-          setFunctions(initialData.functions);
+          setProjects(initialData.projects); setAllocations(initialData.allocations);
+          setPColors(initialData.p_colors); setFunctions(initialData.functions);
         }
-      } catch (error) {
-        console.error("Error loading data:", error);
-      }
+      } catch (error) { console.error("Error loading data:", error); }
       setLoading(false);
     }
     loadData();
   }, []);
 
-  // Master sync function for FIREBASE
   async function syncToDatabase(newProjects, newAllocations, newColors, newFunctions) {
     try {
       await setDoc(doc(db, "planner", "state"), {
-        projects: newProjects,
-        allocations: newAllocations,
-        p_colors: newColors,
-        functions: newFunctions
+        projects: newProjects, allocations: newAllocations, p_colors: newColors, functions: newFunctions
       }, { merge: true });
-    } catch (error) {
-      console.error("Error syncing to DB:", error);
-    }
+    } catch (error) { console.error("Error syncing to DB:", error); }
   }
 
   const [timeView, setTimeView] = useState("weekly"); 
   const [offset, setOffset] = useState(0); 
   const [search,setSearch]=useState("");
-  const [filterFn,setFilterFn]=useState(null);
   const [filterProj,setFilterProj]=useState(null);
-  const [view,setView]=useState("team");
-  
   const [editing,setEditing]=useState(null);
   const [addingProj,setAddingProj]=useState(false);
   const [addingMember, setAddingMember] = useState(false);
-  const [addingResourceToProj, setAddingResourceToProj] = useState(null);
-
+  
   const anchor=useMemo(()=>{
     if(timeView === "weekly") return addDays(new Date(), offset*7);
     const d = new Date(); d.setMonth(d.getMonth() + offset); return d;
   },[offset, timeView]);
 
-  const periods=useMemo(()=>timeView === "weekly" ? get4W(anchor) : get4M(anchor), [anchor, timeView]);
+  const periods=useMemo(()=>timeView === "weekly" ? getDaysForWeekly(anchor) : getDaysForMonthly(anchor), [anchor, timeView]);
   const allPeople=useMemo(()=>Object.entries(functions).flatMap(([fn,pp])=>pp.map(n=>({name:n,fn}))), [functions]);
   const getColor=useCallback(p=>pColors[p]||DEFAULT_COLORS[p]||CPOOL[projects.indexOf(p)%CPOOL.length],[pColors,projects]);
 
-  const kpis=useMemo(()=>{
-    let over=0,under=0,un=0,ok=0;
-    allPeople.forEach(p=>{
-      const mx=Math.max(...periods.map(w=>allocW(allocations[p.name]||[],w)),0);
-      if(mx>100)over++; else if(mx===0)un++; else if(mx<50)under++; else ok++;
-    });
-    return{over,under,unassigned:un,ok};
-  },[allocations,periods,allPeople]);
-
-  const dialLabel=useMemo(()=>{
-    if(timeView === "weekly"){
-      return [...new Set(periods.map(p=>p.start.toLocaleDateString("en-GB",{month:"short",year:"numeric"})))].join(" · ");
-    } else {
-      return [...new Set(periods.map(p=>p.start.getFullYear()))].join(" · ");
+  const dialLabel = useMemo(() => {
+    if(timeView === "weekly") {
+      const s = periods[0].start; const e = periods[periods.length-1].start;
+      return `${s.toLocaleDateString("en-GB",{day:"numeric", month:"short"})} - ${e.toLocaleDateString("en-GB",{day:"numeric", month:"short", year:"numeric"})}`;
     }
-  },[periods, timeView]);
+    return anchor.toLocaleDateString("en-GB",{month:"long", year:"numeric"});
+  }, [periods, timeView, anchor]);
 
-  const baseFilteredPeople = useMemo(() => {
+  const filteredPeople = useMemo(() => {
     const q = search.toLowerCase().trim();
     return allPeople.filter(p => {
       const nameMatch = p.name.toLowerCase().includes(q);
-      const teamMatch = p.fn.toLowerCase().includes(q);
-      const matchSearch = !q || nameMatch || teamMatch;
-      const matchTeam = !filterFn || p.fn === filterFn;
       const matchProj = !filterProj || (allocations[p.name] || []).some(e => e.project === filterProj);
-      return matchSearch && matchTeam && matchProj;
+      return (!q || nameMatch) && matchProj;
     });
-  }, [search, filterFn, filterProj, allocations, allPeople]);
+  }, [search, filterProj, allocations, allPeople]);
 
   const teamViewData = useMemo(() => {
     return Object.entries(functions).map(([fn]) => {
-      return { fn, people: baseFilteredPeople.filter(p => p.fn === fn).map(p => p.name) };
+      return { fn, people: filteredPeople.filter(p => p.fn === fn).map(p => p.name) };
     }).filter(t => t.people.length > 0);
-  }, [functions, baseFilteredPeople]);
+  }, [functions, filteredPeople]);
 
-  // --- ACTIONS WITH SUPABASE SYNC ---
+  // Chart Data Prep
+  const chartData = useMemo(() => {
+    const projCounts = {};
+    Object.values(allocations).flat().forEach(entry => {
+      projCounts[entry.project] = (projCounts[entry.project] || 0) + 1;
+    });
+    return Object.entries(projCounts).map(([label, value]) => ({label, value})).sort((a,b)=>b.value-a.value);
+  }, [allocations]);
+
   function saveAlloc(name, entries){
     const newAlloc = {...allocations, [name]: entries};
-    setAllocations(newAlloc);
-    syncToDatabase(projects, newAlloc, pColors, functions);
-    setEditing(null);
+    setAllocations(newAlloc); syncToDatabase(projects, newAlloc, pColors, functions); setEditing(null);
   }
-  
+
   function addProject(name, color){
     const newProj = [...projects, name];
     const newColors = {...pColors, [name]: color};
-    setProjects(newProj);
-    setPColors(newColors);
-    syncToDatabase(newProj, allocations, newColors, functions);
+    setProjects(newProj); setPColors(newColors); syncToDatabase(newProj, allocations, newColors, functions);
   }
 
-  function deleteProject(targetProject) {
-    const newProjects = projects.filter(p => p !== targetProject);
-    const newColors = { ...pColors };
-    delete newColors[targetProject];
-
-    const newAllocations = { ...allocations };
-    Object.keys(newAllocations).forEach(person => {
-      newAllocations[person] = newAllocations[person].filter(e => e.project !== targetProject);
-    });
-
-    setProjects(newProjects);
-    setPColors(newColors);
-    setAllocations(newAllocations);
-    syncToDatabase(newProjects, newAllocations, newColors, functions);
-  }
-  
   function addMember(name, team){
     const newFuncs = {...functions, [team]: [...(functions[team] || []), name]};
-    setFunctions(newFuncs);
-    syncToDatabase(projects, allocations, pColors, newFuncs);
+    setFunctions(newFuncs); syncToDatabase(projects, allocations, pColors, newFuncs);
   }
 
   function deleteMember(targetMember, targetTeam) {
     const newFunctions = { ...functions };
-    if (newFunctions[targetTeam]) {
-      newFunctions[targetTeam] = newFunctions[targetTeam].filter(name => name !== targetMember);
-    }
-
-    const newAllocations = { ...allocations };
-    delete newAllocations[targetMember];
-
-    setFunctions(newFunctions);
-    setAllocations(newAllocations);
-    syncToDatabase(projects, newAllocations, pColors, newFunctions);
-    setEditing(null); 
+    if (newFunctions[targetTeam]) newFunctions[targetTeam] = newFunctions[targetTeam].filter(n => n !== targetMember);
+    const newAllocations = { ...allocations }; delete newAllocations[targetMember];
+    setFunctions(newFunctions); setAllocations(newAllocations);
+    syncToDatabase(projects, newAllocations, pColors, newFunctions); setEditing(null); 
   }
 
   function deleteTeam(targetTeam) {
-    if(!window.confirm(`Are you sure you want to delete the entire "${targetTeam}" team? This will permanently remove all its members.`)) return;
-
+    if(!window.confirm(`Are you sure you want to delete the "${targetTeam}" team?`)) return;
     const newFunctions = { ...functions };
-    const membersToRemove = newFunctions[targetTeam] || [];
-    delete newFunctions[targetTeam];
-
+    const membersToRemove = newFunctions[targetTeam] || []; delete newFunctions[targetTeam];
     const newAllocations = { ...allocations };
-    membersToRemove.forEach(member => {
-      delete newAllocations[member];
-    });
-
-    setFunctions(newFunctions);
-    setAllocations(newAllocations);
+    membersToRemove.forEach(member => delete newAllocations[member]);
+    setFunctions(newFunctions); setAllocations(newAllocations);
     syncToDatabase(projects, newAllocations, pColors, newFunctions);
   }
-  
-  function handleAddResourceToProject(personName, entry){
-    const existing = allocations[personName] || [];
-    const newAlloc = {...allocations, [personName]: [...existing, entry]};
-    setAllocations(newAlloc);
-    syncToDatabase(projects, newAlloc, pColors, functions);
-  }
 
-  if (loading) {
-    return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#dde8ff"}}>Loading Planner...</div>;
-  }
+  if (loading) return <div style={{height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0d1117", color:"#f97316"}}>Booting Systems...</div>;
 
   return(
-    <div style={{minHeight:"100vh",background:"linear-gradient(135deg,#dde8ff 0%,#eedeff 45%,#d9f0ff 100%)"}}>
+    <div style={{display:"flex", minHeight:"100vh"}}>
       <style>{STYLE}</style>
 
-      {/* HEADER */}
-      <div className="glass" style={{padding:"14px 26px",display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,borderRadius:0,borderLeft:"none",borderRight:"none",borderTop:"none"}}>
-        <div>
-          <div style={{fontSize:19,fontWeight:700,color:"#1e293b",letterSpacing:"-.01em"}}>Resource Planner</div>
-          <div style={{fontSize:10,color:"#94a3b8",marginTop:1}}>{allPeople.length} people · {projects.length} projects</div>
+      {/* --- LEFT SIDEBAR (PROJECTS) --- */}
+      <div style={{width: 260, background: "#010409", borderRight: "1px solid #30363d", display:"flex", flexDirection:"column"}}>
+        <div style={{padding: "24px 20px", borderBottom: "1px solid #30363d"}}>
+          <div className="brand-serif" style={{fontSize: 22, color: "#f0f6fc", marginBottom: 4}}>Studio 137</div>
+          <div style={{fontSize: 11, color: "#8b949e", textTransform: "uppercase", letterSpacing: "0.05em"}}>Resource Command</div>
         </div>
-        <div style={{display:"flex",gap:9,alignItems:"center",flexWrap:"wrap"}}>
-          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search member or team…" className="ginput" style={{padding:"7px 12px",fontSize:13,width:180}}/>
-          <select value={filterFn||""} onChange={e=>setFilterFn(e.target.value||null)} className="ginput" style={{padding:"7px 10px",fontSize:12,cursor:"pointer"}}>
-            <option value="">All teams</option>
-            {Object.keys(functions).map(f=><option key={f} value={f}>{f}</option>)}
-          </select>
-          <div className="glassd" style={{display:"flex",borderRadius:11,padding:3,gap:2}}>
-            {[{v:"team",l:"👥 Team"},{v:"project",l:"📁 Project"}].map(({v,l})=>(
-              <button key={v} onClick={()=>setView(v)} style={{background:view===v?"rgba(99,102,241,.82)":"transparent",border:"none",borderRadius:8,padding:"6px 13px",color:view===v?"#fff":"#64748b",cursor:"pointer",fontSize:12,fontWeight:600,fontFamily:"inherit",transition:"all .18s"}}>{l}</button>
+        
+        <div style={{padding: "20px", flex: 1, overflowY: "auto"}}>
+          <div style={{fontSize: 12, fontWeight: 600, color: "#8b949e", marginBottom: 12, textTransform: "uppercase"}}>Active Projects</div>
+          <div style={{display:"flex", flexDirection:"column", gap: 6}}>
+            <button onClick={()=>setFilterProj(null)} style={{textAlign:"left", background: !filterProj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6, color: !filterProj ? "#fff" : "#8b949e", cursor:"pointer", fontSize: 13, fontWeight: !filterProj ? 600 : 400}}>
+              All Projects
+            </button>
+            {projects.map(proj => (
+              <button key={proj} onClick={()=>setFilterProj(filterProj===proj ? null : proj)} style={{
+                textAlign:"left", display:"flex", alignItems:"center", gap: 8,
+                background: filterProj===proj ? "#21262d" : "transparent", border:"none", padding:"8px 12px", borderRadius: 6,
+                color: filterProj===proj ? "#fff" : "#c9d1d9", cursor:"pointer", fontSize: 13
+              }}>
+                <span style={{width: 8, height: 8, borderRadius: "50%", background: getColor(proj), boxShadow: filterProj===proj ? `0 0 8px ${getColor(proj)}` : 'none'}}/>
+                {proj}
+              </button>
             ))}
           </div>
-          <button onClick={()=>setAddingMember(true)} style={{background:"rgba(255,255,255,.6)", border:"1px solid rgba(99,102,241,.2)", borderRadius:11,padding:"8px 15px",color:"#6366f1",cursor:"pointer",fontSize:12,fontWeight:600}}>+ Member</button>
-          <button onClick={()=>setAddingProj(true)} style={{background:"rgba(99,102,241,.82)",backdropFilter:"blur(8px)",border:"1px solid rgba(99,102,241,.3)",borderRadius:11,padding:"8px 15px",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:600}}>+ Project</button>
         </div>
       </div>
 
-      <div style={{padding:"18px 26px"}}>
-
-        {/* KPIs */}
-        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:11,marginBottom:18}}>
-          {[
-            {l:"Over-allocated",v:kpis.over,c:"#ef4444",bg:"rgba(239,68,68,.06)",ic:"⚠"},
-            {l:"Under-utilised",v:kpis.under,c:"#f59e0b",bg:"rgba(245,158,11,.06)",ic:"↓"},
-            {l:"Unassigned",v:kpis.unassigned,c:"#94a3b8",bg:"rgba(148,163,184,.06)",ic:"○"},
-            {l:"Optimally loaded",v:kpis.ok,c:"#6366f1",bg:"rgba(99,102,241,.06)",ic:"✓"},
-          ].map(k=>(
-            <div key={k.l} className="glass" style={{borderRadius:15,padding:"14px 18px",background:k.bg}}>
-              <div style={{display:"flex",justifyContent:"space-between"}}>
-                <div style={{fontSize:26,fontWeight:700,color:k.c}}>{k.v}</div>
-                <div style={{fontSize:18,opacity:.35}}>{k.ic}</div>
-              </div>
-              <div style={{fontSize:10,color:"#64748b",marginTop:5,fontWeight:600,textTransform:"uppercase",letterSpacing:".07em"}}>{k.l}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Project filter pills */}
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
-          <button onClick={()=>setFilterProj(null)} className="glassd" style={{borderRadius:20,padding:"4px 13px",border:!filterProj?"1px solid rgba(99,102,241,.45)":"1px solid rgba(255,255,255,.6)",color:!filterProj?"#6366f1":"#94a3b8",cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:600}}>All Projects</button>
-          {projects.map(proj=>(
-            <button key={proj} onClick={()=>setFilterProj(filterProj===proj?null:proj)} style={{
-              background:filterProj===proj?`${getColor(proj)}16`:"rgba(255,255,255,.38)",
-              backdropFilter:"blur(8px)",
-              border:`1px solid ${filterProj===proj?getColor(proj)+"55":"rgba(255,255,255,.65)"}`,
-              borderRadius:20,padding:"4px 11px",
-              color:filterProj===proj?getColor(proj):"#64748b",
-              cursor:"pointer",fontSize:12,fontFamily:"inherit",fontWeight:filterProj===proj?600:400,
-              display:"flex",alignItems:"center",gap:5,
-            }}>
-              <span style={{width:6,height:6,borderRadius:"50%",background:getColor(proj)}}/>
-              {proj}
-            </button>
-          ))}
-        </div>
-
-        {/* Dial + Timeline headers */}
-        <div className="glass" style={{borderRadius:14,marginBottom:6}}>
-          <div style={{position:"relative"}}>
-            <Dial offset={offset} setOffset={setOffset} label={dialLabel} />
-            <div style={{position:"absolute", bottom: 8, right: 14, display:"flex", background:"rgba(255,255,255,.5)", padding: 4, borderRadius: 8}}>
-              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"#6366f1":"transparent", color: timeView==="weekly"?"#fff":"#64748b", border:"none", borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:600, cursor:"pointer"}}>Weekly</button>
-              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"#6366f1":"transparent", color: timeView==="monthly"?"#fff":"#64748b", border:"none", borderRadius:6, padding:"4px 10px", fontSize:11, fontWeight:600, cursor:"pointer"}}>Monthly</button>
-            </div>
-          </div>
-          <div style={{display:"grid",gridTemplateColumns:"230px 72px repeat(4,88px)",padding:"0 14px 8px",gap:0,alignItems:"center"}}>
-            <div style={{fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.08em"}}>Person</div>
-            <div style={{fontSize:9,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.08em",textAlign:"center"}}>Status</div>
-            {periods.map((w,i)=>(
-              <div key={i} style={{textAlign:"center"}}>
-                <div style={{fontSize:11,fontWeight:600,color:"#6366f1"}}>{pLabel(w)}</div>
-                <div style={{fontSize:8,color:"#cbd5e1"}}>{w.isMonth ? 'Month' : `Wk ${i+1}`}</div>
-              </div>
-            ))}
+      {/* --- MAIN DASHBOARD AREA --- */}
+      <div style={{flex: 1, display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden"}}>
+        
+        {/* Top Header */}
+        <div style={{padding: "20px 30px", borderBottom: "1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center", background:"#0d1117"}}>
+          <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search resources..." className="ginput" style={{padding: "10px 16px", fontSize: 14, width: 280, background:"#161b22"}}/>
+          <div style={{display:"flex", gap: 12}}>
+             <button onClick={()=>setAddingMember(true)} className="card" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600}}>+ Add Member</button>
+             <button onClick={()=>setAddingProj(true)} className="card glow-border" style={{padding:"8px 16px", color:"#f0f6fc", cursor:"pointer", fontSize:13, fontWeight:600, border:"none"}}>+ Add Project</button>
           </div>
         </div>
 
-        {/* TEAM VIEW */}
-        {view==="team"&&(
-          <div style={{display:"flex",flexDirection:"column",gap:9}}>
-            {teamViewData.map(({fn,people})=>(
-              <div key={fn} className="glass" style={{borderRadius:14,overflow:"hidden"}}>
-                
-                {/* Team Delete Button added to the header */}
-                <div style={{padding:"7px 14px",background:"rgba(99,102,241,.04)",borderBottom:"1px solid rgba(255,255,255,.6)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <div style={{fontSize:10,fontWeight:700,color:"#6366f1",textTransform:"uppercase",letterSpacing:".1em"}}>{fn}</div>
-                    <div style={{fontSize:9,color:"#cbd5e1",background:"rgba(99,102,241,.08)",borderRadius:8,padding:"1px 7px"}}>{people.length}</div>
-                  </div>
-                  <button onClick={(e)=>{ e.stopPropagation(); deleteTeam(fn); }} style={{background:"rgba(239, 68, 68, .08)", border:"1px solid rgba(239, 68, 68, .15)", borderRadius:7, padding:"2px 6px", color:"#ef4444", cursor:"pointer", fontSize:10}}>🗑️</button>
+        {/* Scrollable Content */}
+        <div style={{padding: "24px 30px", overflowY:"auto", flex: 1}}>
+          
+          {/* JIRA-STYLE WIDGETS */}
+          <div style={{display: "grid", gridTemplateColumns: "300px 1fr", gap: 20, marginBottom: 24}}>
+            <div className="card" style={{padding: 20}}>
+              <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 16}}>Status overview</div>
+              <div style={{display:"flex", alignItems:"center", gap: 24}}>
+                <DonutChart data={chartData} colors={pColors} />
+                <div style={{display:"flex", flexDirection:"column", gap: 8, flex: 1, maxHeight: 140, overflowY:"auto"}}>
+                  {chartData.slice(0,6).map(d => (
+                    <div key={d.label} style={{display:"flex", alignItems:"center", justifyContent:"space-between", fontSize:11}}>
+                      <div style={{display:"flex", alignItems:"center", gap: 6}}>
+                        <span style={{width:8, height:8, borderRadius:"2px", background: getColor(d.label)}}/>
+                        <span style={{color:"#c9d1d9"}}>{d.label}</span>
+                      </div>
+                      <span style={{color:"#8b949e"}}>{d.value}</span>
+                    </div>
+                  ))}
                 </div>
-
-                {people.map((name,idx)=>{
-                  const entries=allocations[name]||[];
-                  const loads=periods.map(w=>allocW(entries,w));
-                  const mx=Math.max(...loads,0);
-                  const sc=mx>100?"#ef4444":mx>=75?"#ea580c":mx>50?"#f59e0b":mx>0?"#22c55e":"#cbd5e1";
-                  const sl=mx>100?"OVER":mx>=75?"FULL":mx>50?"MID":mx>0?"LOW":"—";
-                  return(
-                    <div key={name} className="rh"
-                      onClick={()=>setEditing({name,fn:fn})}
-                      style={{display:"grid",gridTemplateColumns:"230px 72px repeat(4,88px)",alignItems:"center",gap:0,padding:"8px 14px",borderBottom:idx<people.length-1?"1px solid rgba(255,255,255,.5)":"none",cursor:"pointer",background:mx>100?"rgba(239,68,68,.03)":"transparent"}}
-                    >
-                      <div style={{display:"flex",alignItems:"center",gap:9}}>
-                        <div style={{width:28,height:28,borderRadius:"50%",flexShrink:0,background:mx>100?"rgba(239,68,68,.1)":mx===0?"rgba(203,213,225,.3)":"rgba(99,102,241,.1)",border:`1.5px solid ${mx>100?"rgba(239,68,68,.3)":mx===0?"rgba(203,213,225,.4)":"rgba(99,102,241,.25)"}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:mx>100?"#ef4444":mx===0?"#94a3b8":"#6366f1"}}>
-                          {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
-                        </div>
-                        <div style={{fontSize:13,fontWeight:500,color:"#1e293b"}}>{name}</div>
-                      </div>
-                      <div style={{textAlign:"center"}}>
-                        <span style={{fontSize:9,fontWeight:700,padding:"3px 7px",borderRadius:6,background:`${sc}14`,color:sc,border:`1px solid ${sc}28`,letterSpacing:".05em"}}>{sl}</span>
-                      </div>
-                      {periods.map((w,i)=>(
-                        <div key={i} style={{padding:"0 4px"}}>
-                          <WaterCell entries={entries} period={w} getColor={getColor}/>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })}
               </div>
-            ))}
+            </div>
+            
+            <div className="card" style={{padding: 20, display:"flex", flexDirection:"column", justifyContent:"center"}}>
+               <div style={{fontSize: 14, fontWeight: 600, color: "#f0f6fc", marginBottom: 8}}>System Health</div>
+               <div style={{fontSize: 13, color: "#8b949e"}}>Showing timeline for <strong style={{color:"#f97316"}}>{timeView}</strong> view. Use the dial below to navigate time periods. Detailed daily breakdown is enabled. Click any user to manage their allocations.</div>
+            </div>
           </div>
-        )}
 
-        {/* PROJECT VIEW */}
-        {view==="project"&&(
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))",gap:12}}>
-            {projects.map(proj=>{
-              const assigned = baseFilteredPeople
-                .filter(p => (allocations[p.name]||[]).some(e => e.project === proj))
-                .map(p => p.name);
-                
-              const wkData = periods.map(w => assigned.filter(pName => (allocations[pName]||[]).some(e => e.project === proj && active(e, w))).length);
-              const col=getColor(proj);
-              
-              if (search && assigned.length === 0) return null;
+          {/* TIMELINE CONTROLS */}
+          <div className="card" style={{padding: "16px 20px", marginBottom: 16, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+            <div style={{display:"flex", alignItems:"center", gap: 16}}>
+              <button onClick={()=>setOffset(w=>w-1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer"}}>‹</button>
+              <div style={{fontSize: 15, fontWeight: 600, color:"#f97316", width: 200, textAlign:"center"}}>{dialLabel}</div>
+              <button onClick={()=>setOffset(w=>w+1)} style={{background:"#21262d", border:"1px solid #30363d", color:"#f0f6fc", width:32, height:32, borderRadius:6, cursor:"pointer"}}>›</button>
+              {offset !== 0 && <button onClick={()=>setOffset(0)} style={{background:"transparent", border:"none", color:"#3b82f6", fontSize:12, cursor:"pointer", textDecoration:"underline"}}>Today</button>}
+            </div>
+            
+            <div style={{display:"flex", background:"#010409", border:"1px solid #30363d", borderRadius: 8, padding: 4}}>
+              <button onClick={()=>{setTimeView("weekly"); setOffset(0);}} style={{background: timeView==="weekly"?"#21262d":"transparent", color: timeView==="weekly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer"}}>Weekly</button>
+              <button onClick={()=>{setTimeView("monthly"); setOffset(0);}} style={{background: timeView==="monthly"?"#21262d":"transparent", color: timeView==="monthly"?"#f0f6fc":"#8b949e", border:"none", borderRadius:6, padding:"6px 16px", fontSize:12, fontWeight:600, cursor:"pointer"}}>Monthly</button>
+            </div>
+          </div>
 
-              return(
-                <div key={proj} className="glass" style={{borderRadius:14,overflow:"hidden",borderTop:`3px solid ${col}`}}>
-                  <div style={{padding:"13px 16px 12px"}}>
-                    
-                    {/* Trash can button added here */}
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-                      <div>
-                        <div style={{fontSize:14,fontWeight:700,color:"#1e293b"}}>{proj}</div>
-                        <div style={{fontSize:10,color:"#94a3b8"}}>{assigned.length} assigned</div>
-                      </div>
-                      <div style={{display:"flex", gap:"6px"}}>
-                        <button onClick={(e)=>{e.stopPropagation(); setAddingResourceToProj(proj);}} style={{background:"rgba(255,255,255,.6)", border:"1px solid rgba(99,102,241,.2)", borderRadius:7, padding:"4px 10px", color:"#6366f1", cursor:"pointer", fontSize:11, fontWeight:700}}>+ Add</button>
-                        <button onClick={(e)=>{
-                            e.stopPropagation(); 
-                            if(window.confirm(`Are you sure you want to delete ${proj}? This will remove it from everyone's schedule.`)){
-                                deleteProject(proj);
-                            }
-                        }} style={{background:"rgba(239, 68, 68, .08)", border:"1px solid rgba(239, 68, 68, .15)", borderRadius:7, padding:"4px 8px", color:"#ef4444", cursor:"pointer", fontSize:11}}>🗑️</button>
-                      </div>
+          {/* TIMELINE GRID */}
+          <div className="card" style={{overflow: "hidden"}}>
+            <div style={{display:"flex", background:"#21262d", borderBottom:"1px solid #30363d", padding:"12px 0"}}>
+              <div style={{width: 240, paddingLeft: 20, fontSize: 11, fontWeight:600, color:"#8b949e", textTransform:"uppercase", flexShrink: 0}}>Resource</div>
+              <div style={{display:"flex", overflowX:"auto", flex: 1}} className="hide-scroll">
+                 {periods.map((d, i) => (
+                   <div key={i} style={{width: 58, flexShrink: 0, textAlign:"center", fontSize: 11, color:"#c9d1d9"}}>{d.label}</div>
+                 ))}
+              </div>
+            </div>
+            
+            <div style={{display:"flex", flexDirection:"column"}}>
+              {teamViewData.map(({fn,people}) => (
+                <div key={fn}>
+                  <div style={{padding:"10px 20px", background:"#1a1f27", borderBottom:"1px solid #30363d", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                    <div>
+                      <span style={{fontSize:12, fontWeight:700, color:"#3b82f6", textTransform:"uppercase"}}>{fn}</span>
+                      <span style={{background:"#010409", padding:"2px 8px", borderRadius:12, marginLeft:8, fontSize:10, color:"#8b949e"}}>{people.length}</span>
                     </div>
-                    
-                    <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:5,marginBottom:13}}>
-                      {wkData.map((c,i)=>(
-                        <div key={i} style={{textAlign:"center",background:"rgba(255,255,255,.5)",borderRadius:9,padding:"7px 3px",border:"1px solid rgba(255,255,255,.8)"}}>
-                          <div style={{fontSize:15,fontWeight:700,color:c===0?"#cbd5e1":col}}>{c||"—"}</div>
-                          <div style={{fontSize:8,color:"#94a3b8",marginTop:1}}>{periods[i].isMonth ? 'M' : 'Wk'} {i+1}</div>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <div style={{display:"flex",flexDirection:"column",gap:2}}>
-                      {assigned.map(pName=>{
-                        const entry=(allocations[pName]||[]).find(e=>e.project===proj);
-                        const pFn = allPeople.find(ap => ap.name === pName)?.fn || "";
-                        return(
-                          <div key={pName} className="rh-proj" onClick={()=>setEditing({name:pName, fn:pFn})} style={{display:"grid",gridTemplateColumns:"24px 1fr 60px 40px",gap:10,alignItems:"center", padding:"5px 6px", margin:"0 -6px"}}>
-                            <div style={{width:24,height:24,borderRadius:"50%",background:`${col}18`,border:`1px solid ${col}30`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,color:col}}>
-                              {pName.split(" ").map(w=>w[0]).slice(0,2).join("")}
-                            </div>
-                            <div style={{fontSize:13,fontWeight:500,color:"#334155",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{pName}</div>
-                            <div style={{fontSize:11,fontWeight:600,color:"#94a3b8",textAlign:"right",whiteSpace:"nowrap"}}>{pFn}</div>
-                            <div style={{fontSize:13,fontWeight:800,color:col,textAlign:"right"}}>{entry?.pct||0}%</div>
+                    <button onClick={(e)=>{ e.stopPropagation(); deleteTeam(fn); }} style={{background:"transparent", border:"none", color:"#8b949e", cursor:"pointer", fontSize:12}}>🗑️</button>
+                  </div>
+                  {people.map(name => {
+                    const entries = allocations[name]||[];
+                    return (
+                      <div key={name} className="rh" onClick={()=>setEditing({name,fn})} style={{display:"flex", alignItems:"center"}}>
+                        <div style={{width: 240, padding:"12px 20px", display:"flex", alignItems:"center", gap: 12, flexShrink: 0}}>
+                          <div style={{width:28, height:28, borderRadius:"50%", background:"#21262d", border:"1px solid #30363d", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:700, color:"#f97316"}}>
+                            {name.split(" ").map(w=>w[0]).slice(0,2).join("")}
                           </div>
-                        );
-                      })}
-                      {assigned.length===0&&<div style={{fontSize:11,color:"#cbd5e1",textAlign:"center",padding:"10px 0"}}>No resources assigned. Click + Add to assign someone.</div>}
-                    </div>
-                  </div>
+                          <div style={{fontSize:13, fontWeight:500, color:"#f0f6fc"}}>{name}</div>
+                        </div>
+                        
+                        <div style={{display:"flex", overflowX:"auto", flex: 1, padding:"8px 0"}} className="hide-scroll">
+                          {periods.map((d, i) => (
+                            <div key={i} style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
+                              <WaterCell entries={entries} period={d} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        )}
-
+          
+        </div>
       </div>
 
       {editing&&<EditModal person={editing.name} fn={editing.fn} entries={allocations[editing.name]||[]} onDelete={(p, f) => deleteMember(p, f)} onSave={e=>saveAlloc(editing.name,e)} onClose={()=>setEditing(null)} projects={projects} getColor={getColor}/>}
       {addingProj&&<AddProjectModal onAdd={addProject} onClose={()=>setAddingProj(false)} existing={projects}/>}
       {addingMember && <AddMemberModal onAdd={addMember} onClose={()=>setAddingMember(false)} teams={Object.keys(functions)} />}
-      {addingResourceToProj && <AddResourceToProjectModal project={addingResourceToProj} allPeople={allPeople} allocations={allocations} onSave={handleAddResourceToProject} onClose={()=>setAddingResourceToProj(null)} />}
     </div>
   );
 }
