@@ -94,10 +94,23 @@ const STYLE = `
   .rh { transition: background .2s ease; border-bottom: 1px solid rgba(255,255,255,0.03); }
   .rh:hover { background: rgba(255,255,255,0.05) !important; }
   
-  .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; }
+  .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; position: relative; }
   .date-cell:hover { background: rgba(255,255,255,0.08); }
 
-  /* New unified hover magnification for lists */
+  /* Intense Liquid Wave Animation */
+  @keyframes intense-liquid {
+    0%   { transform: translateY(0) scaleY(1) skewX(0deg); border-radius: 4px 4px 0 0; }
+    25%  { transform: translateY(-2px) scaleY(1.05) skewX(2deg); border-radius: 8px 2px 0 0; }
+    50%  { transform: translateY(1px) scaleY(0.95) skewX(-2deg); border-radius: 2px 8px 0 0; }
+    75%  { transform: translateY(-1px) scaleY(1.02) skewX(1deg); border-radius: 6px 3px 0 0; }
+    100% { transform: translateY(0) scaleY(1) skewX(0deg); border-radius: 4px 4px 0 0; }
+  }
+  .water-fill { transform-origin: bottom; }
+  .date-cell:hover .water-fill {
+    animation: intense-liquid 0.35s infinite linear;
+    filter: brightness(1.3) saturate(1.3);
+  }
+
   .hover-magnify { transition: all 0.2s ease; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
   .hover-magnify:hover { background: rgba(255,255,255,0.06); transform: scale(1.03); }
 
@@ -234,23 +247,35 @@ function DonutChart({ data, colors }) {
 }
 
 // ── Water cell ──
-function WaterCell({entries, period}){
-  const act=entries.filter(e=>active(e, period));
-  const tot=act.reduce((s,e)=>s+Number(e.pct),0);
-  const over=tot > 100; 
-  const cl=Math.min(tot,100);
-
-  let wc = "transparent";
-  if (tot >= 100) wc = "rgba(249, 115, 22, 0.85)"; 
-  else if (tot >= 75) wc = "rgba(59, 130, 246, 0.85)"; 
-  else if (tot > 0) wc = "rgba(16, 185, 129, 0.7)"; 
+function WaterCell({entries, period, getColor}){
+  const act = entries.filter(e => active(e, period));
+  const tot = act.reduce((s,e) => s + Number(e.pct), 0);
+  const over = tot > 100; 
+  const cl = Math.min(tot, 100);
 
   return(
-    <div style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"rgba(0,0,0,0.4)", border:`1px solid ${over?"rgba(249,115,22,.5)":"rgba(255,255,255,0.05)"}`, pointerEvents:"none"}}>
-      <div style={{position:"absolute",bottom:0,left:0,right:0,height:`${cl}%`,background:wc,transition:"height .5s cubic-bezier(.34,1.56,.64,1)"}}/>
-      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2}}>
-        <div style={{fontSize:10,fontWeight:700,color:tot>40?"#fff":"#8b949e"}}>{tot===0?"—":`${tot}%`}</div>
+    <div className="water-cell" style={{width: 50, height: 44, borderRadius: 6, overflow:"hidden", position:"relative", background:"rgba(0,0,0,0.4)", border:`1px solid ${over?"rgba(249,115,22,.5)":"rgba(255,255,255,0.05)"}`}}>
+      
+      {/* Container holding the segmented project colors */}
+      <div className="water-fill" style={{
+        position: "absolute", bottom: 0, left: 0, right: 0, height: `${cl}%`,
+        display: "flex", flexDirection: "column-reverse",
+        transition: "height .5s cubic-bezier(.34,1.56,.64,1)"
+      }}>
+        {tot > 0 && act.map((e, idx) => (
+          <div key={idx} style={{
+            height: `${(Number(e.pct) / Math.max(tot, 100)) * 100}%`,
+            background: getColor(e.project), opacity: 0.9,
+            borderTop: idx < act.length - 1 ? "1px solid rgba(255,255,255,0.2)" : "none"
+          }}/>
+        ))}
       </div>
+      
+      {/* Percentage Label */}
+      <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:2, pointerEvents:"none"}}>
+        <div style={{fontSize:10,fontWeight:800,color:tot>40?"#fff":"#8b949e", textShadow: tot>40?"0 1px 3px rgba(0,0,0,0.6)":"none"}}>{tot===0?"—":`${tot}%`}</div>
+      </div>
+      
     </div>
   );
 }
@@ -501,6 +526,14 @@ export default function Dashboard(){
     setFunctions(newFuncs); syncToDatabase(projects, allocations, pColors, newFuncs);
   }
 
+  function deleteMember(targetMember, targetTeam) {
+    const newFunctions = { ...functions };
+    if (newFunctions[targetTeam]) newFunctions[targetTeam] = newFunctions[targetTeam].filter(n => n !== targetMember);
+    const newAllocations = { ...allocations }; delete newAllocations[targetMember];
+    setFunctions(newFunctions); setAllocations(newAllocations);
+    syncToDatabase(projects, newAllocations, pColors, newFunctions); setEditing(null); 
+  }
+
   function deleteTeam(targetTeam) {
     if(!window.confirm(`Are you sure you want to delete the "${targetTeam}" team?`)) return;
     const newFunctions = { ...functions };
@@ -521,7 +554,7 @@ export default function Dashboard(){
       {/* --- LEFT SIDEBAR (PROJECTS) --- */}
       <div className="sidebar" style={{width: 260, display:"flex", flexDirection:"column", zIndex:10}}>
         
-        {/* SMALLER LOGO */}
+        {/* CLEAN LOGO */}
         <div style={{padding: "30px 20px 24px", borderBottom: "1px solid rgba(255,255,255,0.05)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center"}}>
           <div className="logo-container">
              <div className="logo-ring ring-amber" />
@@ -707,7 +740,7 @@ export default function Dashboard(){
                           <div style={{display:"flex", padding:"8px 0"}}>
                             {periods.map((d, i) => (
                               <div key={i} onClick={()=>setEditing({name, fn, defaultStart: dStr(d.start)})} className="date-cell" style={{width: 58, flexShrink: 0, display:"flex", justifyContent:"center"}}>
-                                <WaterCell entries={entries} period={d} />
+                                <WaterCell entries={entries} period={d} getColor={getColor} />
                               </div>
                             ))}
                           </div>
