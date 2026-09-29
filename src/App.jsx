@@ -97,18 +97,34 @@ const STYLE = `
   .date-cell { transition: background 0.15s ease; cursor: pointer; border-radius: 4px; position: relative; }
   .date-cell:hover { background: rgba(255,255,255,0.08); }
 
-  /* Intense Liquid Wave Animation */
-  @keyframes intense-liquid {
-    0%   { transform: translateY(0) scaleY(1) skewX(0deg); border-radius: 4px 4px 0 0; }
-    25%  { transform: translateY(-2px) scaleY(1.05) skewX(2deg); border-radius: 8px 2px 0 0; }
-    50%  { transform: translateY(1px) scaleY(0.95) skewX(-2deg); border-radius: 2px 8px 0 0; }
-    75%  { transform: translateY(-1px) scaleY(1.02) skewX(1deg); border-radius: 6px 3px 0 0; }
-    100% { transform: translateY(0) scaleY(1) skewX(0deg); border-radius: 4px 4px 0 0; }
+  /* --- NEW SINGLE WAVE ANIMATION --- */
+  .water-fill { 
+    transform-origin: bottom; 
+    position: relative; 
+    overflow: hidden; 
+    border-radius: 2px 2px 0 0; 
   }
-  .water-fill { transform-origin: bottom; }
+  .water-fill::after {
+    content: ''; 
+    position: absolute; inset: 0; left: -150%; width: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    z-index: 5; pointer-events: none; transform: skewX(-20deg);
+  }
+  @keyframes wave-pass {
+    0% { left: -150%; }
+    100% { left: 150%; }
+  }
+  @keyframes gentle-swell {
+    0% { transform: scaleY(1); }
+    40% { transform: scaleY(1.08); }
+    100% { transform: scaleY(1); }
+  }
   .date-cell:hover .water-fill {
-    animation: intense-liquid 0.35s infinite linear;
-    filter: brightness(1.3) saturate(1.3);
+    animation: gentle-swell 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+    filter: brightness(1.2) saturate(1.2);
+  }
+  .date-cell:hover .water-fill::after {
+    animation: wave-pass 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
   }
 
   .hover-magnify { transition: all 0.2s ease; cursor: pointer; padding: 6px 10px; border-radius: 6px; }
